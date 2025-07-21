@@ -18,10 +18,6 @@
 		}
 
 		private function get_appointments($organisation_id, $start) {
-			if ($organisation_id == null) {
-				$organisation_id = $this->user->organisation_id;
-			}
-
 			$query = "select a.*, d.dm_id, UNIX_TIMESTAMP(begin) as begin, UNIX_TIMESTAMP(end) as end, d.title as adventure ".
 			         "from users u, agenda a left join adventures d on a.adventure_id=d.id ".
 			         "where a.user_id=u.id and u.organisation_id=%d and (begin>=%s or end>=%s) order by begin,end";
@@ -29,16 +25,12 @@
 			return $this->db->execute($query, $organisation_id, $start, $start);
 		}
 
-		public function get_appointments_from_today($organisation_id = null) {
-			$start = date("Y-m-d 00:00:00");
-
-			return $this->get_appointments($organisation_id, $start);
+		public function get_appointments_from_today() {
+			return $this->get_appointments($this->user->organisation_id, date("Y-m-d 00:00:00"));
 		}
 
-		public function get_appointments_from_this_month($organisation_id = null) {
-			$start = date("Y-m-1 00:00:00");
-
-			return $this->get_appointments($organisation_id, $start);
+		public function get_appointments_from_this_month($organisation_id) {
+			return $this->get_appointments($organisation_id, date("Y-m-1 00:00:00"));
 		}
 
 		public function get_appointments_for_month($month, $year) {

@@ -211,6 +211,14 @@
 					$type = "cell";
 				} else if (($active_map["fog_of_war"] == FOW_DAY_REAL) || ($active_map["fog_of_war"] == FOW_NIGHT_REAL)) {
 					$type = "real";
+
+					if (isset($_GET["fow"])) {
+						$_SESSION["fow_fast"] = ($_GET["fow"] == "fast");
+					}
+					#if (is_true($_SESSION["fow_fast"] ?? false) && ($active_map["fog_of_war"] == FOW_NIGHT_REAL)) {
+					if (is_true($_SESSION["fow_fast"] ?? false)) {
+						$type .= "-fast";
+					}
 				} else if ($active_map["fog_of_war"] == FOW_REVEAL) {
 					$type = "reveal";
 				} else {
@@ -454,20 +462,15 @@
 				$this->view->open_tag("journal");
 				foreach ($journal as $entry) {
 					if ($entry["timestamp"] - $timestamp > 6 * HOUR) {
-						$entry["session"] = "Session ".$session;
+						$entry["session"] = date("j F Y", $entry["timestamp"]);
 						$session++;
 					}
-
-					$message = new \Banshee\message($entry["content"]);
-					$entry["content"] = $message->unescaped_output();
-
-					$entry["content"] = preg_replace('/(http(s?):\/\/([^ ]+)\.(gif|jpg|png|webp))/', '<img src="$1" />', $entry["content"]);
 
 					$this->view->record($entry, "entry");
 					$timestamp = $entry["timestamp"];
 				}
 				if (time() - $timestamp > 6 * HOUR) {
-					$this->view->record(array("session" => "Session ".$session), "entry");
+					$this->view->record(array("session" => date("j F Y")), "entry");
 				}
 				$this->view->close_tag();
 

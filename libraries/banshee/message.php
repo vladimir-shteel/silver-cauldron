@@ -1,7 +1,7 @@
 <?php
 	/* Copyright (c) by Hugo Leisink <hugo@leisink.net>
 	 * This file is part of the Banshee PHP framework
-	 * https://www.banshee-php.org/
+	 * https://gitlab.com/hsleisink/banshee/
 	 *
 	 * Licensed under The MIT License
 	 */
@@ -327,48 +327,6 @@
 			 */
 			foreach ($this->bbcodes as $bbcode => $html) {
 				$this->message = $this->translate_bbcode($bbcode, $html, $this->message, $show_url);
-			}
-
-			return $this->message;
-		}
-
-		/* Translate text smilies to smiley images
-		 *
-		 * INPUT:  -
-		 * OUTPUT: string message
-		 * ERROR:  -
-		 */
-		public function translate_smilies() {
-			/* Load configuration
-			 */
-			if ($this->smilies === null) {
-				$this->smilies = array();
-
-				foreach (config_file("smilies") as $line) {
-					$line = explode("\t", chop($line));
-					$text = array_shift($line);
-					$image = array_pop($line);
-
-					$this->smilies[$text] = $image;
-				}
-			}
-
-			/* Translate smilies
-			 */
-			foreach ($this->smilies as $text => $image) {
-				$image = "<img src=\"/images/smilies/".$image."\">";
-
-				$text_len = strlen($text);
-				if ($this->message == $text) {
-					$this->message = $image;
-					continue;
-				}
-
-				if (substr($this->message, 0, $text_len + 1) == $text." ") {
-					$this->message = $image.substr($this->message, $text_len);
-				}
-
-				$this->message = str_replace(" ".$text, " ".$image, $this->message);
 			}
 
 			return $this->message;

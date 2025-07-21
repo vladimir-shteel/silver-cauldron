@@ -60,9 +60,10 @@ function screen_scroll() {
 }
 
 function write_sidebar(message) {
-	var sidebar = $('div.sidebar');
-	sidebar.append('<p>' + message + '</p>');
-	sidebar.prop('scrollTop', sidebar.prop('scrollHeight'));
+    var sidebar = $('div.sidebar');
+    message = message.replace(/\n/g, '<br />');
+    sidebar.append('<p>' + message + '</p>');
+    sidebar.prop('scrollTop', sidebar.prop('scrollHeight'));
 }
 
 function show_image(img) {
@@ -72,7 +73,7 @@ function show_image(img) {
 	$('body div.image_overlay').show();
 }
 
-function message_to_sidebar(name, message) {
+function message_to_sidebar(message, name = null) {
 	if ((message.substring(0, 7) == 'http://') || (message.substring(0, 8) == 'https://')) {
 		var parts = message.split('.');
 		var extension = parts.pop();
@@ -85,7 +86,66 @@ function message_to_sidebar(name, message) {
 		}
 	} else {
 		message = message.replace(/</g, '&lt;');
-		message = message.replace(/\n/g, '<br />');
+
+		/* BB codes
+		 */
+		var pos = 0;
+		while ((begin = message.indexOf('[', pos)) != -1) {
+			pos = begin + 1;
+
+			if ((end = message.indexOf(']', pos)) == -1) {
+				continue;
+			}
+
+			var tag = message.substring(pos, end);
+			if (/^\d+$/.test(tag)) {
+				pos = end + 1;
+				continue;
+			}
+
+			pos = end + 1;
+
+			var params = null;
+			var content = null;
+
+			if ((space = tag.indexOf(' ')) != -1) {
+				params = tag.substring(space + 1);
+				tag = tag.substring(0, space);
+			}
+
+			if ((close = message.indexOf('[/' + tag + ']', end)) != -1) {
+				content = message.substring(end + 1, close);
+				end = close + tag.length + 2;
+			}
+
+			var replacement = (content != null) ? content : '';
+
+			switch (tag) {
+				case 'b':
+					if (content == null) {
+						continue;
+					}
+					replacement = '<b>' + content + '</b>';
+					break;
+				case 'target':
+					if ((params == null) || (content == null)) {
+						continue;
+					}
+
+					var mouse_over = 'onMouseOver="javascript:$(\'div#' + params + '\').addClass(\'target\');"';
+					var mouse_out = 'onMouseOut="javascript:$(\'div#' + params + '\').removeClass(\'target\');"';
+					replacement = '<span ' + mouse_over + '' + mouse_out + ' class="target">' + content + '</span>';
+					break;
+				case 'spell':
+					break;
+				default:
+					pos = end + 1;
+					continue;
+			}
+
+			message = message.substring(0, begin) + replacement + message.substring(end + 1);
+			pos = begin + replacement.length;
+		}
 	}
 
 	if (name != null) {
@@ -284,7 +344,7 @@ function object_show(obj) {
 	obj.attr('is_hidden', 'no');
 }
 
-function object_view(obj, max_size = 300) {
+function object_view(obj, max_size = 500) {
 	var color = localStorage.getItem('interface_color');
 	var bgcolor = (color == 'dark') ? '64, 64, 64' : '160, 160, 160';
 
@@ -552,6 +612,10 @@ function key_down(event) {
 			// TAB
 			toggle_fullscreen();
 			break;
+		case 27:
+			// Escape
+			$('div.menu').hide();
+			break;
 	}
 }
 
@@ -570,6 +634,13 @@ $(document).ready(function() {
 
 	write_sidebar('<img src="/images/cauldron.png" style="max-width:80px; display:block; margin:0 auto" draggable="false" />');
 	write_sidebar('<b>Welcome to Cauldron v' + version + '</b>');
+
+	if (window.location.search == '?spectate') {
+		$('a.leave').attr('href', '/spectate');
+		$('select.map-selector option').each(function() {
+			$(this).val($(this).val() + '?spectate');
+		});
+	}
 
 	/* Websocket
 	 */
@@ -746,7 +817,7 @@ $(document).ready(function() {
 				object_rotate(obj, data.rotation, data.speed);
 				break;
 			case 'say':
-				message_to_sidebar(data.name, data.mesg);
+				message_to_sidebar(data.mesg, data.name);
 				break;
 			case 'shape':
 				var size = parseInt(data.size)

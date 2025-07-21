@@ -155,7 +155,7 @@
 			         "left join tokens t on l.token_id=t.id ".
 			         "where c.id=i.character_id and i.map_id=%d and m.id=i.map_id and c.user_id=u.id ".
 			         "and l.adventure_id=m.adventure_id and l.character_id=c.id ".
-			         "order by id desc";
+			         "order by name";
 
 			return $this->db->execute($query, $map_id);
 		}
@@ -239,7 +239,7 @@
 
 			/* Get journal
 			 */
-			$query = "select user_id, content, UNIX_TIMESTAMP(timestamp) as timestamp ".
+			$query = "select id, user_id, content, UNIX_TIMESTAMP(timestamp) as timestamp ".
 			         "from journal where adventure_id=%d order by timestamp";
 
 			if (($result = $this->db->execute($query, $adventure_id)) === false) {
@@ -248,7 +248,6 @@
 
 			foreach ($result as $i => $item) {
 				$result[$i]["writer"] = ($characters[$item["user_id"]] ?? ($users[$item["user_id"]] ?? JOURNAL_UNKNOWN_USER));
-				unset($result[$i]["user_id"]);
 			}
 
 			return $result;

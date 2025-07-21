@@ -80,7 +80,7 @@
 		private function set_image_format($format) {
 			$this->load_image = "imagecreatefrom".$format;
 			$this->save_image = "image".$format;
-			$this->mime_format  = "image/".$format;
+			$this->mime_type  = "image/".$format;
 		}
 
 		/* Magic method get
@@ -226,7 +226,7 @@
 				$bgcolor = imagecolorallocatealpha($this->resource, 0, 0, 0, 127);
 			}
 
-			if (($resource = imagerotate($this->resource, $angle, $bgcolor, 0)) == false) {
+			if (($resource = imagerotate($this->resource, $angle, $bgcolor)) == false) {
 				return false;
 			}
 

@@ -163,7 +163,10 @@
 
 			$min_size = 2 * $this->settings->screen_grid_size;
 
-			if ((($map["width"] ?? 0) < $min_size) || (($map["height"] ?? 0) < $min_size)) {
+			if ((valid_input($map["width"], VALIDATE_NUMBERS) == false) || (valid_input($map["height"], VALIDATE_NUMBERS) == false)) {
+				$this->view->add_message("Specify map width and height in numbers only.");
+				$result = false;
+			} else if ((($map["width"] ?? 0) < $min_size) || (($map["height"] ?? 0) < $min_size)) {
 				$this->view->add_message("The map must be at least %sx%s pixels. Does the map file exists? Try specifying the dimension manually.", $min_size, $min_size);
 				$result = false;
 			}

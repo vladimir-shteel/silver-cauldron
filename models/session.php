@@ -16,8 +16,7 @@
 		}
 
 		public function get_session($id) {
-			$query = "select id, UNIX_TIMESTAMP(expire) as expire, ip_address, name ".
-			         "from sessions where id=%d and user_id=%d and expire>=%s";
+			$query = "select id, name from sessions where id=%d and user_id=%d and expire>=%s";
 			$now = date("Y-m-d H:i:s");
 
 			if (($result = $this->db->execute($query, $id, $this->user->id, $now)) == false) {

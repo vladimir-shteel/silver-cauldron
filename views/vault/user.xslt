@@ -87,7 +87,7 @@
 <label for="status">Account status:</label>
 <select id="status" name="status" class="form-control">
 <xsl:if test="user/@id=/output/user/@id">
-<xsl:attribute name="disabled">disabled</xsl:attribute>
+<xsl:attribute name="readonly">readonly</xsl:attribute>
 </xsl:if>
 <xsl:for-each select="status/status">
 <option value="{@id}">

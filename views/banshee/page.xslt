@@ -20,7 +20,7 @@
 <form action="{url}" method="post">
 <xsl:value-of disable-output-escaping="yes" select="content" />
 <div class="btn-group">
-<input type="submit" value="{submit}" class="btn btn-default" />
+<input type="submit" name="submit_button" value="{submit}" class="btn btn-default" />
 <xsl:if test="../back">
 <a href="/{../back}" class="btn btn-default">Back</a>
 </xsl:if>

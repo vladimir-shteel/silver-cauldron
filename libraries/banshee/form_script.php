@@ -181,8 +181,6 @@
 								$this->view->add_message("The field '%s' does not contain a date.", $element["label"]);
 								$valid_post = false;
 							}
-						case "text":
-							$message = new message($post[$elem_id]);
 					}
 				} else if ($element["required"]) {
 					$this->view->add_message("The field '%s' cannot be empty.", $element["label"]);

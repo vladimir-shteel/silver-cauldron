@@ -17,10 +17,6 @@
 <meta property="og:description" content="{description}" />
 <meta property="og:image" content="https://{/output/hostname}/images/cauldron_large.png" />
 <meta property="og:url" content="https://{/output/hostname}/images/cauldron_large.png" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="{title}" />
-<meta name="twitter:description" content="{description}" />
-<meta name="twitter:image" content="https://{/output/hostname}/images/cauldron_large.png" />
 <link rel="apple-touch-icon" href="https://{/output/hostname}/images/cauldron_large.png" />
 <link rel="icon" href="/images/favicon.png" />
 <link rel="shortcut icon" href="/images/favicon.png" />
@@ -99,8 +95,7 @@ div.wrapper > div.header {
 	<div class="footer">
 		<div class="container">
 			<span>Cauldron VTT v<xsl:value-of select="/output/cauldron/version" /></span>
-			<span><a href="/privacy">Privacy statement</a></span>
-			<span>Join on <a href="https://www.reddit.com/r/CauldronVTT/" target="_blank">Reddit</a></span>
+			<span><a href="/privacy">Privacy statement</a></span>>
 			<span>Join on <a href="https://discord.gg/w8FB93taYJ" target="_blank">Discord</a></span>
 			<xsl:if test="/output/user">
 			<span>Logged in as <a href="/account"><xsl:value-of select="/output/user" /></a></span>

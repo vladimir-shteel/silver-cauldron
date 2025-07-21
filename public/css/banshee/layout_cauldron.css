@@ -142,16 +142,8 @@ textarea.form-control {
 	height:75px;
 }
 
-div.input-group span.input-group-btn .btn {
-	padding:6px 24px;
-}
-
 div.btn-group {
 	margin:15px 10px 10px 0;
-}
-
-.btn {
-	padding:4px 24px;
 }
 
 .btn-xs {

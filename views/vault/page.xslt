@@ -74,7 +74,6 @@
 <input type="hidden" name="id" value="{page/@id}" />
 </xsl:if>
 
-<label for="preview">Preview:</label>
 <xsl:if test="@preview">
 <div id="preview" class="preview">
 <div class="preview-heading">Preview of <xsl:value-of select="page/url" />

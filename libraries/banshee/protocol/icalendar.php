@@ -48,11 +48,29 @@
 
 		public function generate() {
 			$timezone = date("e");
+			$winter = date("O", strtotime("1 january"));
+			$summer = date("O", strtotime("1 july"));
+
 			$result =
 				"BEGIN:VCALENDAR\r\n".
 				"VERSION:2.0\r\n".
 				"PRODID:-//".$this->prod_id."\r\n".
-				"X-WR-CALNAME;VALUE=TEXT:".$this->title."\r\n";
+				"X-WR-CALNAME;VALUE=TEXT:".$this->title."\r\n".
+				"BEGIN:VTIMEZONE\r\n".
+				"TZID:".$timezone."\r\n".
+				"BEGIN:DAYLIGHT\r\n".
+				"TZOFFSETFROM:".$winter."\r\n".
+				"TZOFFSETTO:".$summer."\r\n".
+				"TZNAME:CEST\r\n".
+				"DTSTART:20000101T000000\r\n".
+				"END:DAYLIGHT\r\n".
+				"BEGIN:STANDARD\r\n".
+				"TZOFFSETFROM:".$summer."\r\n".
+				"TZOFFSETTO:".$winter."\r\n".
+				"TZNAME:CET\r\n".
+				"DTSTART:20000101T000000\r\n".
+				"END:STANDARD\r\n".
+				"END:VTIMEZONE\r\n";
 
 			foreach ($this->items as $item) {
 				list($day, $month, $year, $hour, $minute, $second) = $this->explode_timestamp($item["begin"]);
@@ -64,7 +82,7 @@
 				$result .= sprintf("SUMMARY:%s\r\n", $this->secure_string($item["summary"]));
 				$result .= sprintf("DESCRIPTION:%s\r\n", $this->secure_string($item["description"]));
 
-				$format = "DT%s;TZID=/mozilla.org/20050126_1/%s:%s%s%sT%s%s%s\r\n";
+				$format = "DT%s;TZID=%s:%s%s%sT%s%s%s\r\n";
 
 				$result .= sprintf($format, "START", $timezone, $year, $month, $day, $hour, $minute, $second);
 
@@ -78,26 +96,7 @@
 
 			$timezone_diff = date("O");
 
-			$result .=
-				"BEGIN:VTIMEZONE\r\n".
-				"TZID:/mozilla.org/20050126_1/".$timezone."\r\n".
-				"X-LIC-LOCATION:".$timezone."\r\n".
-				"BEGIN:DAYLIGHT\r\n".
-				"TZOFFSETFROM:+0100\r\n".
-				"TZOFFSETTO:+0200\r\n".
-				"TZNAME:CEST\r\n".
-				"DTSTART:19700329T020000\r\n".
-				"RRULE:FREQ=YEARLY;INTERVAL=1;BYDAY=-1SU;BYMONTH=3\r\n".
-				"END:DAYLIGHT\r\n".
-				"BEGIN:STANDARD\r\n".
-				"TZOFFSETFROM:+0200\r\n".
-				"TZOFFSETTO:+0100\r\n".
-				"TZNAME:CET\r\n".
-				"DTSTART:19701025T030000\r\n".
-				"RRULE:FREQ=YEARLY;INTERVAL=1;BYDAY=-1SU;BYMONTH=1\r\n".
-				"END:STANDARD\r\n".
-				"END:VTIMEZONE\r\n".
-				"END:VCALENDAR\r\n";
+			$result .= "END:VCALENDAR\r\n";
 
 			return $result;
 		}
@@ -105,7 +104,7 @@
 		public function to_view($view) {
 			$view->disable();
 
-			if (strstr($_SERVER["HTTP_USER_AGENT"], "Firefox") !== false) {
+			if (($_GET["output"] ?? null) == "txt") {
 				header("Content-Type: text/plain");
 			} else {
 				header("Content-Type: text/calendar");

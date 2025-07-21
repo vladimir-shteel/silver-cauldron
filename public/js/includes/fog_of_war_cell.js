@@ -15,6 +15,10 @@ var fog_of_war_spot_max = null;
 var fog_of_war_distance = 0;
 var fog_of_war_lights = null;
 
+var walls = [];
+var windows = [];
+var doors = [];
+
 /* Check if two lines cross
  */
 function on_segment(point, line_p1, line_p2) {
@@ -67,21 +71,18 @@ function lines_intersect(line1_p1, line1_p2, line2_p1, line2_p2) {
 /* Fog of War functions
  */
 function check_vision(char_pos, construct, fog_of_war_spots) {
-	var cons_x = parseInt(construct.attr('pos_x'));
-	var cons_y = parseInt(construct.attr('pos_y'));
+	var cons_x = construct.pos_x;
+	var cons_y = construct.pos_y;
 
 	var cons_p1 = {
 		left: cons_x * grid_cell_size,
 		top: cons_y * grid_cell_size
 	}
 
-	var length = parseInt(construct.attr('length'));
-	var direction = construct.attr('direction');
-
-	if (direction == 'horizontal') {
-		cons_x += length;
-	} else if (direction == 'vertical') {
-		cons_y += length;
+	if (construct.direction == 'horizontal') {
+		cons_x += construct.length;
+	} else if (construct.direction == 'vertical') {
+		cons_y += construct.length;
 	} else {
 		return;
 	}
@@ -116,21 +117,18 @@ function check_vision(char_pos, construct, fog_of_war_spots) {
 }
 
 function check_lighting(pos, light_pos, construct, fog_of_war_spot) {
-	var cons_x = parseInt(construct.attr('pos_x'));
-	var cons_y = parseInt(construct.attr('pos_y'));
+	var cons_x = construct.pos_x;
+	var cons_y = construct.pos_y;
 
 	var cons_p1 = {
 		left: cons_x * grid_cell_size,
 		top: cons_y * grid_cell_size
 	}
 
-	var length = parseInt(construct.attr('length'));
-	var direction = construct.attr('direction');
-
-	if (direction == 'horizontal') {
-		cons_x += length;
-	} else if (direction == 'vertical') {
-		cons_y += length;
+	if (construct.direction == 'horizontal') {
+		cons_x += construct.length;
+	} else if (construct.direction == 'vertical') {
+		cons_y += construct.length;
 	} else {
 		return;
 	}
@@ -180,12 +178,24 @@ function enlightened(x, y) {
 			continue;
 		}
 
-		$('div.wall').each(function() {
-			if ($(this).attr('transparent') == 'yes') {
+		/* Walls
+		 */
+		walls.forEach(function(wall) {
+			light_spot = check_lighting(pos, light_pos, wall, light_spot);
+
+			if (light_spot == 0) {
+				return false;
+			}
+		});
+
+		/* Windows
+		 */
+		windows.forEach(function(wall) {
+			if (wall.obj.attr('transparent') == 'yes') {
 				return true;
 			}
 
-			light_spot = check_lighting(pos, light_pos, $(this), light_spot);
+			light_spot = check_lighting(pos, light_pos, wall, light_spot);
 
 			if (light_spot == 0) {
 				return false;
@@ -193,14 +203,16 @@ function enlightened(x, y) {
 		});
 
 		if (light_spot >= 0) {
-			$('div.door').each(function() {
-				if ($(this).attr('state') == 'open') {
+			/* Doors
+			 */
+			doors.forEach(function(door) {
+				if (door.bars) {
 					return true;
-				} else if ($(this).attr('bars') == 'yes') {
+				} else if (door.obj.attr('state') == 'open') {
 					return true;
 				}
 
-				light_spot = check_lighting(pos, light_pos, $(this), light_spot);
+				light_spot = check_lighting(pos, light_pos, door, light_spot);
 
 				if (light_spot == 0) {
 					return false;
@@ -244,6 +256,38 @@ function fog_of_war_init(z_index) {
 	for (s = 0; s < fog_of_war_checks.length; s++) {
 		fog_of_war_spot_max += fog_of_war_checks[s][0];
 	}
+	
+	fog_of_war_index_constructs();
+}
+
+function fog_of_war_index_constructs() {
+	$('div.wall').each(function() {
+		var wall = {};
+		wall.pos_x = parseInt($(this).attr('pos_x'));
+		wall.pos_y = parseInt($(this).attr('pos_y'));
+		wall.length = parseInt($(this).attr('length'));
+		wall.direction = $(this).attr('direction');
+		wall.transparent = ($(this).attr('transparent') == 'yes');
+
+		if ($(this).hasClass('window')) {
+			wall.obj = $(this);
+			windows.push(wall);
+		} else {
+			walls.push(wall);
+		}
+	});
+
+	$('div.door').each(function() {
+		var door = {};
+		door.obj = $(this);
+		door.pos_x = parseInt($(this).attr('pos_x'));
+		door.pos_y = parseInt($(this).attr('pos_y'));
+		door.length = parseInt($(this).attr('length'));
+		door.direction = $(this).attr('direction');
+		door.bars = ($(this).attr('bars') == 'yes');
+
+		doors.push(door);
+	});
 }
 
 function fog_of_war_pattern(pattern, obj) {
@@ -264,33 +308,35 @@ function fog_of_war_update(obj) {
 
 	fog_of_war_lights = [];
 
-	$('.light').each(function() {
-		if ($(this).attr('state') != 'on') {
-			return true;
-		}
+    if (fog_of_war_distance > 0) {
+		$('.light').each(function() {
+			if ($(this).attr('state') != 'on') {
+				return true;
+			}
 
-		var pos = object_position($(this));
-		pos.left += (grid_cell_size >> 1);
-		pos.top += (grid_cell_size >> 1);
+			var pos = object_position($(this));
+			pos.left += (grid_cell_size >> 1);
+			pos.top += (grid_cell_size >> 1);
 
-		var radius = (parseInt($(this).attr('radius')) + FOW_DISTANCE_ADJUST) * grid_cell_size;
+			var radius = (parseInt($(this).attr('radius')) + FOW_DISTANCE_ADJUST) * grid_cell_size;
 
-		fog_of_war_lights.push([pos.left, pos.top, radius]);
-	});
+			fog_of_war_lights.push([pos.left, pos.top, radius]);
+		});
 
-	$('div.character').each(function() {
-		if ($(this).attr('light') == '0') {
-			return true;
-		}
+		$('div.character').each(function() {
+			if ($(this).attr('light') == '0') {
+				return true;
+			}
 
-		var pos = object_position($(this));
-		pos.left += (grid_cell_size >> 1);
-		pos.top += (grid_cell_size >> 1);
+			var pos = object_position($(this));
+			pos.left += (grid_cell_size >> 1);
+			pos.top += (grid_cell_size >> 1);
 
-		var radius = (parseInt($(this).attr('light')) + FOW_DISTANCE_ADJUST) * grid_cell_size;
+			var radius = (parseInt($(this).attr('light')) + FOW_DISTANCE_ADJUST) * grid_cell_size;
 
-		fog_of_war_lights.push([pos.left, pos.top, radius]);
-	});
+			fog_of_war_lights.push([pos.left, pos.top, radius]);
+		});
+	}
 
 	var pos = object_position(obj);
 
@@ -327,24 +373,30 @@ function fog_of_war_update(obj) {
 
 	/* Walls
 	 */
-	$('div.wall').each(function() {
-		if ($(this).attr('transparent') == 'yes') {
+	walls.forEach(function(wall) {
+		fog_of_war_spots = check_vision(char_pos, wall, fog_of_war_spots);
+	});
+
+	/* Windows
+	 */
+	windows.forEach(function(wall) {
+		if (wall.obj.attr('transparent') == 'yes') {
 			return true;
 		}
 
-		fog_of_war_spots = check_vision(char_pos, $(this), fog_of_war_spots);
+		fog_of_war_spots = check_vision(char_pos, wall, fog_of_war_spots);
 	});
 
 	/* Doors
 	 */
-	$('div.door').each(function() {
-		if ($(this).attr('state') == 'open') {
+	doors.forEach(function(door) {
+		if (door.bars) {
 			return true;
-		} else if ($(this).attr('bars') == 'yes') {
+		} else if (door.obj.attr('state') == 'open') {
 			return true;
 		}
 
-		fog_of_war_spots = check_vision(char_pos, $(this), fog_of_war_spots);
+		fog_of_war_spots = check_vision(char_pos, door, fog_of_war_spots);
 	});
 
 	/* Zones
@@ -361,16 +413,22 @@ function fog_of_war_update(obj) {
 		var width = $(this).width() / grid_cell_size;
 		var height = $(this).height() / grid_cell_size;
 
-		var zone = $('<div pos_x="' + pos_x + '" pos_y="' + pos_y + '" length="' + width + '" direction="horizontal" />');
+		var zone = {};
+		zone.pos_x = pos_x;
+		zone.pos_y = pos_y
+		zone.length = width;
+		zone.direction = 'horizontal';
 		fog_of_war_spots = check_vision(char_pos, zone, fog_of_war_spots);
 
-		var zone = $('<div pos_x="' + pos_x + '" pos_y="' + (pos_y + height) + '" length="' + width + '" direction="horizontal" />');
+		zone.pos_y = pos_y + height;
 		fog_of_war_spots = check_vision(char_pos, zone, fog_of_war_spots);
 
-		var zone = $('<div pos_x="' + pos_x + '" pos_y="' + pos_y + '" length="' + height + '" direction="vertical" />');
+		zone.pos_y = pos_y;
+		zone.length = height;
+		zone.direction = 'vertical';
 		fog_of_war_spots = check_vision(char_pos, zone, fog_of_war_spots);
 
-		var zone = $('<div pos_x="' + (pos_x + width) + '" pos_y="' + pos_y + '" length="' + height + '" direction="vertical" />');
+		zone.pos_x = pos_x + width;
 		fog_of_war_spots = check_vision(char_pos, zone, fog_of_war_spots);
 	});
 

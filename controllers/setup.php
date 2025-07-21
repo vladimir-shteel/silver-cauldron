@@ -24,6 +24,7 @@
 					$this->model->import_sql();
 				} else if ($_POST["submit_button"] == "Update database") {
 					$this->model->update_database();
+					$this->model->import_inserts(UPDATE_TABLES);
 				} else if ($_POST["submit_button"] == "Set password") {
 					$this->model->set_admin_credentials($_POST["username"], $_POST["password"], $_POST["repeat"]);
 				} else if ($_POST["submit_button"] == "Create directories") {

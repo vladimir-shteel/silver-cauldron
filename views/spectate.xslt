@@ -20,7 +20,7 @@
 <span>Dungeon Master: <xsl:value-of select="dm" /></span>
 <div class="btn-group">
 <xsl:if test="introduction!=''"><button class="btn btn-primary btn-sm show_introduction{@id}">Introduction</button></xsl:if>
-<a href="/{/output/page}/{@id}" class="btn btn-success btn-sm">Spectate adventure</a>
+<a href="/{/output/page}/{@id}?spectate" class="btn btn-success btn-sm">Spectate adventure</a>
 </div>
 </div>
 </div>
@@ -46,7 +46,7 @@
 </div>
 </xsl:if>
 <div class="menu">
-<a href="/adventure" class="btn btn-default btn-sm">Leave session</a>
+<a href="/adventure" class="btn btn-default btn-sm leave">Leave session</a>
 <button class="btn btn-default btn-sm show_journal">Journal</button>
 <xsl:if test="map/type='video'"><button id="playvideo" onClick="javascript:$('video').get(0).play();" class="btn btn-default btn-xs">Play video</button></xsl:if>
 <button class="btn btn-default btn-sm show_collectables">Inventory</button>

@@ -1,5 +1,7 @@
 <?php
-	define("CAULDRON_VERSION", "3.7");
+	define("CAULDRON_VERSION", "3.8");
+
+	define("UPDATE_TABLES", array("menu", "pages"));
 
 	define("PLAYER_ROLE_ID", 2);
 	define("DUNGEON_MASTER_ROLE_ID", 3);
@@ -32,7 +34,8 @@
 
 	define("CONDITIONS", array("blinded", "charmed", "deafened", "exhausted",
 		"frightened", "grappled", "incapacitated", "invisible", "paralyzed",
-		"petrified", "poisoned", "prone", "restrained", "stunned", "unconscious"));
+		"petrified", "poisoned", "prone", "restrained", "stunned", "unconscious",
+		"A / red", "B / orange", "C / yellow", "D / green", "E / blue", "F / purple"));
 
 	define("TOKEN_DEFAULT_AC", 10);
 	define("TOKEN_DEFAULT_HP", 4);

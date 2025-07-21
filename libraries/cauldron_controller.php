@@ -2,8 +2,8 @@
 	class cauldron_controller extends Banshee\controller {
 		private $adventures = null;
 
-		protected function adventures_pulldown_init() {
-			if (($this->adventures = $this->model->get_adventures()) === false) {
+		protected function adventures_pulldown_init($all = false) {
+			if (($this->adventures = $this->model->get_my_adventures($all)) === false) {
 				$this->view->add_tag("result", "Database error.");
 				return false;
 			}
@@ -35,9 +35,9 @@
 
 		protected function adventures_pulldown_changed() {
 			if ($_POST["submit_button"] == "Change adventure") {
-				if ($this->model->is_my_adventure($_POST["adventure"])) {
+#				if ($this->model->is_my_adventure($_POST["adventure"])) {
 					$_SESSION["edit_adventure_id"] = $_POST["adventure"];
-				}
+#				}
 			}
 		}
 	}

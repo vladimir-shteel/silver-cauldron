@@ -38,8 +38,12 @@
 					$result = false;
 				}
 			} else {
-				list(, $extension) = explode("/", $token["type"], 2);
-				if (in_array($extension, array("gif", "jpg", "jpeg", "png")) == false) {
+				$parts = explode("/", $token["type"], 2);
+
+				if (count($parts) < 2) {
+					$this->view->add_message("Invalid token.");
+					$result = false;
+				} else if (in_array($parts[1], array("gif", "jpg", "jpeg", "png")) == false) {
 					$this->view->add_message("Invalid token.");
 					$result = false;
 				}
@@ -139,6 +143,9 @@
 			if (is_numeric($character["initiative"]) == false) {
 				$this->view->add_message("Invalid initiative bonus.");
 				$result = false;
+			} else if (($character["initiative"] < -32000) || ($character["initiative"] > 32000)) {
+				$this->view->add_message("Initiative bonus out of range.");
+				$result = false;
 			}
 
 			if ($this->token_upload_okay($token, $character["id"] ?? null) == false) {
@@ -160,10 +167,14 @@
 		}
 
 		private function save_token($token, $id, $type) {
+			$image = new \Banshee\image($token["tmp_name"]);
+
 			if ($type == "topdown") {
-				$image = new \Banshee\image($token["tmp_name"]);
 				$image->rotate(180);
-				$image->save($token["tmp_name"]);
+			}
+
+			if ($image->save($token["tmp_name"]) == false) {
+				return false;
 			}
 
 			return copy($token["tmp_name"], "resources/".$this->user->resources_key."/characters/".$id.".".$token["extension"]);
@@ -460,7 +471,9 @@
 				$this->view->add_message("No dice found in roll.");
 				$result = false;
 			} else {
-				$roll = preg_replace('/ +/', "", $weapon["roll"]);
+				$roll = preg_replace('/ /', "", $weapon["roll"]);
+				$roll = preg_replace('/\+-/', "-", $roll);
+				$roll = preg_replace('/-/', "+-", $roll);
 				$parts = explode("+", $roll);
 
 				foreach ($parts as $part) {
@@ -471,6 +484,8 @@
 					}
 
 					if (valid_input($part, VALIDATE_NUMBERS)) {
+						continue;
+					} else if ((substr($part, 0, 1) == "-") && valid_input(substr($part, 1), VALIDATE_NUMBERS)) {
 						continue;
 					}
 

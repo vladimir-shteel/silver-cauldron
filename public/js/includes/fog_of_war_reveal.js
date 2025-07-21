@@ -32,6 +32,9 @@ function fog_of_war_init(z_index, is_dungeon_master) {
 	});
 }
 
+function fog_of_war_index_constructs() {
+}
+
 function fog_of_war_pattern(pattern, obj) {
 }
 

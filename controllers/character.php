@@ -127,7 +127,7 @@
 						/* Create character
 						 */
 						if ($this->model->create_character($_POST, $_FILES["token"], $_FILES["sheet_file"]) === false) {
-							$this->view->add_message("Error creating character.");
+							$this->view->add_message("Error creating character. Possibly, the token's image extension is wrong (.jpg instead of .webp).");
 							$this->show_character_form($_POST);
 						} else {
 							$this->user->log_action("character %d created", $this->db->last_insert_id);

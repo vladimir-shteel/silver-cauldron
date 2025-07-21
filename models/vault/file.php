@@ -18,6 +18,16 @@
 				return false;
 			}
 
+			$valid_extensions = array(ALLOWED_UPLOADS, MAP_IMAGE_EXTENSIONS, MAP_VIDEO_EXTENSIONS);
+			$valid_extensions = implode("|", $valid_extensions);
+			$valid_extensions = explode("|", $valid_extensions);
+
+			$extension = array_pop(explode(".", $file));
+
+			if (in_array($extension, $valid_extensions) == false) {
+				return false;
+			}
+
 			return valid_input($file, VALIDATE_NUMBERS.VALIDATE_LETTERS."-_.& ");
 		}
 

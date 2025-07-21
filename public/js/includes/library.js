@@ -47,6 +47,9 @@ function cauldron_alert(message, title = 'Cauldron alert', callback_close = unde
 	var alert_window = $(dialog).windowframe({
 		header: title,
 		width: 500,
+		open: function() {
+			alert_window.find('input').focus();
+		},
 		close: function() {
 			$(document).off('keydown', key_handler);
 			alert_window.destroy();

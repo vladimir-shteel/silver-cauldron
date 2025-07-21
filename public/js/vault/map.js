@@ -190,17 +190,17 @@ function init_grid(grid_cell_size) {
 	var map_width = Math.round($('div.playarea > div').first().width());
 	var map_height = Math.round($('div.playarea > div').first().height());
 
-	var result = [];
+	var possible_sizes = [];
 	for (i = grid_size_min; i <= grid_size_max; i++) {
 		if (((map_width % i) == 0) && ((map_height % i) == 0)) {
-			result.push(i);
+			possible_sizes.push(i);
 		}
 	}
 
-	if (result.length == 0) {
+	if (possible_sizes.length == 0) {
 		$('span.sizes').text('None found.');
 	} else {
-		$('span.sizes').text(result.join(', '));
+		$('span.sizes').text(possible_sizes.join(', '));
 	}
 
 	/* Add grid find
@@ -219,11 +219,6 @@ function init_grid(grid_cell_size) {
 		$('div.playarea div.map *').css('left', '0');
 		$('div.playarea div.map *').css('top', '0');
 		grid_ctx.clearRect(0, 0, grid_canvas.width, grid_canvas.height)
-
-		var possible_sizes = []
-		$('span.sizes').text().split(', ').forEach(function(value) {
-			possible_sizes.push(parseInt(value));
-		});
 
 		$('canvas').one('mousedown', function(event) {
 			var pos = $('canvas').offset();
@@ -277,6 +272,7 @@ function init_grid(grid_cell_size) {
 				slider_fraction.slider('value', fraction);
 				handle_fraction.text(fraction);
 
+console.log(possible_sizes);
 				var ofs_x = Math.round(from_x % cell_size);
 				if (ofs_x > MAX_OFFSET) {
 					ofs_x = 0;
@@ -292,7 +288,7 @@ function init_grid(grid_cell_size) {
 				var ofs_y = Math.round(from_y % cell_size);
 				if (ofs_y > MAX_OFFSET) {
 					ofs_y = 0;
-				} else if (possible_sizes > 0) {
+				} else if (possible_sizes.length > 0) {
 					if ((100 * ofs_y / cell_size <= 3) || (100 * (ofs_y - cell_size) / cell_size <= 2)) {
 						ofs_y = 0;
 					}

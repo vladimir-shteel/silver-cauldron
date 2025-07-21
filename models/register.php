@@ -62,11 +62,11 @@
 		}
 
 		public function validate_code($data) {
-			if ($data["code"] != $_SESSION["register_code"]) {
+			if (trim($data["code"]) != $_SESSION["register_code"]) {
 				$this->view->add_message("Invalid verification code.");
 				return false;
 			}
-			
+
 			return true;
 		}
 
@@ -77,7 +77,7 @@
 			$format_okay = valid_input($data["username"], VALIDATE_NONCAPITALS.VALIDATE_NUMBERS."@.-", VALIDATE_NONEMPTY);
 
 			if (($length_okay == false) || ($format_okay == false)) {
-				$this->view->add_message("Your username must consist of lowercase letters with a mimimum length of %d.", self::MINIMUM_USERNAME_LENGTH);
+				$this->view->add_message("Your username must consist of lowercase letters with a minimum length of %d characters.", self::MINIMUM_USERNAME_LENGTH);
 				$result = false;
 			}
 

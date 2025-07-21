@@ -99,21 +99,34 @@
 			}
 
 			$queries = array(
+				array("delete from relation_connections where from_entity_id in ".
+					"(select id from relation_entities where adventure_id=%d)", $adventure_id),
+				array("delete from relation_connections where to_entity_id in ".
+					"(select id from relation_entities where adventure_id=%d)", $adventure_id),
+				array("delete from relation_entities where adventure_id=%d", $adventure_id),
 				array("delete from agenda where adventure_id=%d", $adventure_id),
-				array("delete from story_encounter_monsters where story_encounter_id in (select id from story_encounters where adventure_id=%d)", $adventure_id),
+				array("delete from story_encounter_monsters where story_encounter_id in ".
+						"(select id from story_encounters where adventure_id=%d)", $adventure_id),
 				array("delete from story_encounters where adventure_id=%d", $adventure_id),
 				array("delete from story_events where adventure_id=%d", $adventure_id),
 				array("delete from story_npcs where adventure_id=%d", $adventure_id),
 				array("delete from story_objects where adventure_id=%d", $adventure_id),
 				array("delete from journal where adventure_id=%d", $adventure_id),
 				array("delete from collectables where adventure_id=%d", $adventure_id),
-				array("delete from lights where map_id in (select id from maps where adventure_id=%d)", $adventure_id),
-				array("delete from blinders where map_id in (select id from maps where adventure_id=%d)", $adventure_id),
-				array("delete from doors where map_id in (select id from maps where adventure_id=%d)", $adventure_id),
-				array("delete from walls where map_id in (select id from maps where adventure_id=%d)", $adventure_id),
-				array("delete from zones where map_id in (select id from maps where adventure_id=%d)", $adventure_id),
-				array("delete from map_token where map_id in (select id from maps where adventure_id=%d)", $adventure_id),
-				array("delete from map_character where map_id in (select id from maps where adventure_id=%d)", $adventure_id),
+				array("delete from lights where map_id in ".
+					"(select id from maps where adventure_id=%d)", $adventure_id),
+				array("delete from blinders where map_id in ".
+					"(select id from maps where adventure_id=%d)", $adventure_id),
+				array("delete from doors where map_id in ".
+					"(select id from maps where adventure_id=%d)", $adventure_id),
+				array("delete from walls where map_id in ".
+					"(select id from maps where adventure_id=%d)", $adventure_id),
+				array("delete from zones where map_id in ".
+					"(select id from maps where adventure_id=%d)", $adventure_id),
+				array("delete from map_token where map_id in ".
+					"(select id from maps where adventure_id=%d)", $adventure_id),
+				array("delete from map_character where map_id in ".
+					"(select id from maps where adventure_id=%d)", $adventure_id),
 				array("delete from adventure_character where adventure_id=%d", $adventure_id),
 				array("update adventures set active_map_id=null where id=%d", $adventure_id),
 				array("delete from maps where adventure_id=%d", $adventure_id),

@@ -258,7 +258,7 @@ function _spell_show_details(name) {
 
 	details.find('button.tochat').on('click', function() {
 		var spell = _spells_window.find('h2').text();
-		send_message('spell:' + spell, character_name);
+		send_message('[spell]' + spell + '[/spell]', character_name);
 	});
 
 	var container = $('div.spells div.details');

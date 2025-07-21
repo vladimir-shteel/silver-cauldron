@@ -537,7 +537,7 @@
 		/* Write to websocket
 		 */
 		public function write_to_websocket($sock, $message) {
-			$message = utf8_encode($message);
+			$message = mb_convert_encoding($message, "UTF-8", "ISO-8859-1");
 
 			$first_byte = 0x81;
 			$length = strlen($message);

@@ -79,7 +79,7 @@ div.pause {
 	right:0;
 	bottom:0;
 	left:0;
-	background-color:#ffffff;
+	background-image:url(https://www.cauldron-vtt.net/images/layout/background-bright.png);
 	z-index:100000;
 	text-align:center;
 }
@@ -415,6 +415,10 @@ div.journal div.entry {
 	margin-bottom:10px;
 }
 
+div.journal div.entry span.content {
+	white-space:pre-wrap;
+}
+
 div.journal div.entry img {
 	display:block;
 	max-width:100%;
@@ -581,6 +585,11 @@ div.sidebar p.measure {
 div.sidebar span.say {
 	display:block;
 	margin-left:15px;
+}
+
+div.sidebar span.target {
+	color:#ff8000;
+	cursor:crosshair;
 }
 
 div.sidebar div.sea-text {
@@ -764,6 +773,17 @@ div.marker span {
 	text-overflow:ellipsis;
 	user-select:none;
 }
+
+div.target img {
+	border:2px dashed #ff4000;
+	background-color:rgba(255, 192, 128, 0.7);
+	box-sizing:border-box;
+}
+
+div.target.zone {
+	border:5px dashed #ffffff;
+}
+
 div.mine span {
 	border-color:#404040;
 	background-color:#c0c0ff;

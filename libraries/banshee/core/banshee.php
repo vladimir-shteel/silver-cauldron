@@ -422,6 +422,16 @@
 		}
 	}
 
+	/* Connection information
+	 */
+	if (isset($_SERVER["HTTP_SCHEME"]) == false) {
+		$_SERVER["HTTP_SCHEME"] = "http";
+	}
+
+	if (isset($_SERVER["HTTPS"]) == false) {
+		$_SERVER["HTTP_SCHEME"] = "off";
+	}
+
 	/* PHP warning prevention
 	 */
 	if (isset($_SERVER["REQUEST_METHOD"]) == false) {

@@ -15,7 +15,7 @@
 <h1>Critical miss</h1>
 <img src="/images/fail.png" alt="error" class="error" />
 <p><xsl:apply-templates select="website_error" /></p>
-<p>If you do not agree with this outcome, contact the <a href="mailto:{webmaster_email}">webmaster</a>.</p>
+<p>If you do not agree on this outcome, contact the <a href="mailto:{webmaster_email}">webmaster</a>.</p>
 <p>Click <a href="/">here</a> to return to the homepage.</p>
 </xsl:template>
 

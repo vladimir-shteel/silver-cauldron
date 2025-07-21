@@ -1,6 +1,7 @@
 const FOW_COLOR = '#202020';
 const FOW_LIGHT_EDGE = 0.75;
 const FOW_COVERED_CHECKS = 2;
+const FOW_REAL_FAST = false;
 
 var fog_of_war_distance = 0;
 
@@ -9,6 +10,11 @@ var fow_ctx = null;
 var fow_image_data = null;
 
 var fow_pattern = null;
+
+var walls = null;
+var windows = null;
+var blinders = null;
+var doors = null;
 
 function get_edge_pos(obj_x, obj_y, wall_x, wall_y) {
 	var edge_x = 0;
@@ -68,7 +74,7 @@ function draw_fow_shape(ctx, obj_x, obj_y, pos1_x, pos1_y, pos2_x, pos2_y) {
 
 	if (edge_pos.left != prev_edge_x) {
 		if ((pos1_x == pos2_x) || (pos1_y == pos2_y)) {
-			/* Horizontal of vertical
+			/* Horizontal or vertical
 			 */
 			if (edge_pos.top < obj_y) {
 				var corner_y = 0;
@@ -104,18 +110,17 @@ function draw_fow_shape(ctx, obj_x, obj_y, pos1_x, pos1_y, pos2_x, pos2_y) {
 }
 
 function draw_fow_shape_for_construct(ctx, obj_x, obj_y, construct) {
-	var pos1_x = parseInt(construct.attr('pos_x')) * grid_cell_size;
-	var pos1_y = parseInt(construct.attr('pos_y')) * grid_cell_size;
+	var pos1_x = construct.pos_x * grid_cell_size;
+	var pos1_y = construct.pos_y * grid_cell_size;
 
 	var pos2_x = pos1_x;
 	var pos2_y = pos1_y;
 
-	var length = parseInt(construct.attr('length')) * grid_cell_size;
-	var direction = construct.attr('direction');
+	var length = construct.length * grid_cell_size;
 
-	if (direction == 'horizontal') {
+	if (construct.direction == 'horizontal') {
 		pos2_x += length;
-	} else if (direction == 'vertical') {
+	} else if (construct.direction == 'vertical') {
 		pos2_y += length;
 	} else {
 		return;
@@ -153,34 +158,36 @@ function draw_light_sphere(pos_x, pos_y, radius) {
 
 	/* Walls
 	 */
-	$('div.wall').each(function() {
-		if ($(this).attr('transparent') == 'yes') {
+	walls.forEach(function(wall) {
+		draw_fow_shape_for_construct(l_ctx, pos_x, pos_y, wall);
+	});
+
+	/* Windows
+	 */
+	windows.forEach(function(wall) {
+		if (wall.obj.attr('transparent') == 'yes') {
 			return true;
 		}
 
-		draw_fow_shape_for_construct(l_ctx, pos_x, pos_y, $(this));
+		draw_fow_shape_for_construct(l_ctx, pos_x, pos_y, wall);
 	});
 
 	/* Doors
 	 */
-	$('div.door').each(function() {
-		if ($(this).attr('state') == 'open') {
+	doors.forEach(function(door) {
+		if (door.bars) {
 			return true;
-		} else if ($(this).attr('bars') == 'yes') {
+		} else if (door.obj.attr('state') == 'open') {
 			return true;
 		}
 
-		draw_fow_shape_for_construct(l_ctx, pos_x, pos_y, $(this));
+		draw_fow_shape_for_construct(l_ctx, pos_x, pos_y, door);
 	});
 	
 	/* Blinders
 	 */
-	$('div.blinder').each(function() {
-		var pos1_x = parseInt($(this).attr('pos1_x'));
-		var pos1_y = parseInt($(this).attr('pos1_y'));
-		var pos2_x = parseInt($(this).attr('pos2_x'));
-		var pos2_y = parseInt($(this).attr('pos2_y'));
-		draw_fow_shape(l_ctx, pos_x, pos_y, pos1_x, pos1_y, pos2_x, pos2_y);
+	blinders.forEach(function(blinder) {
+		draw_fow_shape(l_ctx, pos_x, pos_y, blinder.pos1_x, blinder.pos1_y, blinder.pos2_x, blinder.pos2_y);
 	});
 
 	fow_ctx.globalCompositeOperation = 'destination-in';
@@ -233,6 +240,52 @@ function fog_of_war_init(z_index) {
 		fow_ctx.strokeStyle = fow_pattern;
 		fow_ctx.lineWidth = 1;
 	}
+
+	fog_of_war_index_constructs();
+}
+
+function fog_of_war_index_constructs() {
+	walls = [];
+	windows = [];
+	$('div.wall').each(function() {
+		var wall = {};
+		wall.pos_x = parseInt($(this).attr('pos_x'));
+		wall.pos_y = parseInt($(this).attr('pos_y'));
+		wall.length = parseInt($(this).attr('length'));
+		wall.direction = $(this).attr('direction');
+		wall.transparent = ($(this).attr('transparent') == 'yes');
+
+		if ($(this).hasClass('window')) {
+			wall.obj = $(this);
+			windows.push(wall);
+		} else {
+			walls.push(wall);
+		}
+	});
+
+	doors = [];
+	$('div.door').each(function() {
+		var door = {};
+		door.obj = $(this);
+		door.pos_x = parseInt($(this).attr('pos_x'));
+		door.pos_y = parseInt($(this).attr('pos_y'));
+		door.length = parseInt($(this).attr('length'));
+		door.direction = $(this).attr('direction');
+		door.bars = ($(this).attr('bars') == 'yes');
+
+		doors.push(door);
+	});
+
+	blinders = [];
+	$('div.blinder').each(function() {
+		var blinder = {};
+		blinder.pos1_x = parseInt($(this).attr('pos1_x'));
+		blinder.pos1_y = parseInt($(this).attr('pos1_y'));
+		blinder.pos2_x = parseInt($(this).attr('pos2_x'));
+		blinder.pos2_y = parseInt($(this).attr('pos2_y'));
+
+		blinders.push(blinder);
+	});
 }
 
 function fog_of_war_pattern(pattern, obj) {
@@ -282,13 +335,14 @@ function fog_of_war_update(obj) {
 		});
 
 		$('div.character').each(function() {
+			if ($(this).attr('light') == '0') {
+				return true;
+			}
+
+			var pos = object_position($(this));
 			var radius = parseInt($(this).attr('light'));
 
-			if (radius > 0) {
-				var pos = object_position($(this));
-
-				draw_light_sphere(pos.left + half_cell, pos.top + half_cell, radius * grid_cell_size);
-			}
+			draw_light_sphere(pos.left + half_cell, pos.top + half_cell, radius * grid_cell_size);
 		});
 	} else {
 		fow_ctx.clearRect(0, 0, fow_canvas.width, fow_canvas.height);
@@ -296,34 +350,36 @@ function fog_of_war_update(obj) {
 
 	/* Walls
 	 */
-	$('div.wall').each(function() {
-		if ($(this).attr('transparent') == 'yes') {
+	walls.forEach(function(wall) {
+		draw_fow_shape_for_construct(fow_ctx, obj_x, obj_y, wall);
+	});
+
+	/* Windows
+	 */
+	windows.forEach(function(wall) {
+		if (wall.obj.attr('transparent') == 'yes') {
 			return true;
 		}
 
-		draw_fow_shape_for_construct(fow_ctx, obj_x, obj_y, $(this));
+		draw_fow_shape_for_construct(fow_ctx, obj_x, obj_y, wall);
 	});
 
 	/* Doors
 	 */
-	$('div.door').each(function() {
-		if ($(this).attr('state') == 'open') {
+	doors.forEach(function(door) {
+		if (door.bars) {
 			return true;
-		} else if ($(this).attr('bars') == 'yes') {
+		} else if (door.obj.attr('state') == 'open') {
 			return true;
 		}
 
-		draw_fow_shape_for_construct(fow_ctx, obj_x, obj_y, $(this));
+		draw_fow_shape_for_construct(fow_ctx, obj_x, obj_y, door);
 	});
 
 	/* Blinders
 	 */
-	$('div.blinder').each(function() {
-		var pos1_x = parseInt($(this).attr('pos1_x'));
-		var pos1_y = parseInt($(this).attr('pos1_y'));
-		var pos2_x = parseInt($(this).attr('pos2_x'));
-		var pos2_y = parseInt($(this).attr('pos2_y'));
-		draw_fow_shape(fow_ctx, obj_x, obj_y, pos1_x, pos1_y, pos2_x, pos2_y);
+	blinders.forEach(function(blinder) {
+		draw_fow_shape(fow_ctx, obj_x, obj_y, blinder.pos1_x, blinder.pos1_y, blinder.pos2_x, blinder.pos2_y);
 	});
 
 	/* Zones

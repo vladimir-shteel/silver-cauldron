@@ -65,6 +65,8 @@
 		public function start_move($map_id, $pos_x, $pos_y) {
 			if ($this->valid_map_id($map_id) == false) {
 				return false;
+			} else if (($pos_x < 0) || ($pos_y < 0)) {
+				return false;
 			}
 
 			$query = "update maps set start_x=%d, start_y=%d where id=%d";
@@ -190,6 +192,8 @@
 
 		public function token_move($instance_id, $pos_x, $pos_y) {
 			if ($this->valid_token_instance_id($instance_id) == false) {
+				return false;
+			} else if (($pos_x < 0) || ($pos_y < 0)) {
 				return false;
 			}
 
@@ -388,6 +392,8 @@
 		public function character_move($instance_id, $pos_x, $pos_y) {
 			if ($this->valid_character_instance_id($instance_id) == false) {
 				return false;
+			} else if (($pos_x < 0) || ($pos_y < 0)) {
+				return false;
 			}
 
 			$data = array("pos_x" => (int)$pos_x, "pos_y" => (int)$pos_y);
@@ -532,6 +538,8 @@
 		public function light_move($light_id, $pos_x, $pos_y) {
 			if ($this->valid_light_id($light_id) == false) {
 				return false;
+			} else if (($pos_x < 0) || ($pos_y < 0)) {
+				return false;
 			}
 
 			$data = array("pos_x" => (int)$pos_x, "pos_y" => (int)$pos_y);
@@ -661,6 +669,8 @@
 
 		public function zone_move($zone_id, $pos_x, $pos_y) {
 			if ($this->valid_zone_id($zone_id) == false) {
+				return false;
+			} else if (($pos_x < 0) || ($pos_y < 0)) {
 				return false;
 			}
 
@@ -809,7 +819,23 @@
 				"user_id"      => $this->user->id,
 				"content"      => $content);
 
-			return $this->db->insert("journal", $data) != false;
+			if ($this->db->insert("journal", $data) === false) {
+				return false;
+			}
+
+			return $this->db->last_insert_id;
+		}
+
+		public function journal_update($entry_id, $content) {
+			if ($content == "") {
+				$query = "delete from journal where id=%d and user_id=%d";				
+
+				return $this->db->query($query, $entry_id, $this->user->id) !== false;
+			} else {
+				$query = "update journal set content=%s where id=%d and user_id=%d";
+
+				return $this->db->query($query, $content, $entry_id, $this->user->id) !== false;
+			}
 		}
 
 		/* Alternate functions

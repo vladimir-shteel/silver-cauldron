@@ -255,7 +255,7 @@
 			$this->message_fields = array();
 			foreach ($data as $key => $value) {
 				$key = sprintf($this->field_format, $key);
-				$this->message_fields[$key] = $value;
+				$this->message_fields[$key] = (($value !== null) ? $value : "");
 			}
 
 			return true;

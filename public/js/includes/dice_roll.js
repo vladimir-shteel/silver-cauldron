@@ -29,6 +29,8 @@ function dice_roll_quick(dice, addition, callback) {
 	}
 
 	callback(result, addition);
+
+	return true;
 }
 
 function roll_dice(dice_input, send_to_others = true) {
@@ -304,8 +306,25 @@ $(document).ready(function() {
 			button.find('input.roll').on('click', function() {
 				wf_dice_roll.close();
 
-				var dice = $(this).attr('title');
-				roll_dice(dice, dungeon_master == false);
+				var roll = $(this).attr('title');
+
+				if ($(this).hasClass('btn-danger')) {
+					var new_roll = [];
+
+					roll.replace(/ +/g, ' ').split('+').forEach(function(dice) {
+						var parts = dice.split('d');
+						if (parts.length == 2) {
+							parts[0] = 2 * parseInt(parts[0]);
+							dice = parts.join('d');		
+						}
+
+						new_roll.push(dice);
+					});
+
+					roll = new_roll.join(' + ');;
+				}
+
+				roll_dice(roll, dungeon_master == false);
 			});
 			button.find('input.remove').on('click', function() {
 				if (confirm('Delete dice?')) {
@@ -322,13 +341,42 @@ $(document).ready(function() {
 		};
 	}
 
+	var dice_roll_key_down = function(event) {
+		if (event.which != 17) {
+			return;
+		}
+
+		wf_dice_roll.find('div.dicerolls_defined input.btn-default').addClass('btn-d');
+		wf_dice_roll.find('div.dicerolls_defined input.btn-primary').addClass('btn-p');
+		wf_dice_roll.find('div.dicerolls_defined input.btn-default').removeClass('btn-default');
+		wf_dice_roll.find('div.dicerolls_defined input.btn-primary').removeClass('btn-primary');
+		wf_dice_roll.find('div.dicerolls_defined input.btn').addClass('btn-danger');
+	};
+
+	var dice_roll_key_up = function(event) {
+		if (event.which != 17) {
+			return;
+		}
+
+		wf_dice_roll.find('div.dicerolls_defined input.btn').removeClass('btn-danger');
+		wf_dice_roll.find('div.dicerolls_defined input.btn-d').addClass('btn-default');
+		wf_dice_roll.find('div.dicerolls_defined input.btn-p').addClass('btn-primary');
+	};
+
 	wf_dice_roll = $(dice_window).windowframe({
 		activator: 'button.show_dice',
 		header: 'Dice roll',
-		info: '<p>Use this tool to roll dice. The option \'animated\' rolls a 3D dice on the screen and shows the result in the sidebar. The option \'quick\' only shows the roll results in the sidebar.</p><p>Use the Save button to save a dice selection. They appear at the top of the dice roll window. The blue buttons represent the weapons you added to your character in the <a href="/character">Characters</a> page.</p>',
+		info: '<p>Use this tool to roll dice. The option \'animated\' rolls a 3D dice on the screen and shows the result in the sidebar. The option \'quick\' only shows the roll results in the sidebar.</p><p>Use the Save button to save a dice selection. They appear at the top of the dice roll window. The blue buttons represent the weapons you added to your character in the <a href="/character">Characters</a> page.</p><p>Hold the CTRL key to double the dice for your saved dice selections and weapons. Use this to perform a critical damage roll.</p>',
 		width: 650,
 		open: function() {
 			dice_roll_init();
+
+			$('body').on('keydown', dice_roll_key_down);
+			$('body').on('keyup', dice_roll_key_up);
+		},
+		close: function() {
+			$('body').off('keydown', dice_roll_key_down);
+			$('body').off('keyup', dice_roll_key_up);
 		},
 		buttons: {
 			'Roll': function() {

@@ -73,19 +73,6 @@
 			return $role["id"] != ADMIN_ROLE_ID;
 		}
 
-		private function fix_role_data($keys, $role) {
-			/* Work-around for PHP's nasty dot-to-underscore replacing
-			 */
-			foreach ($keys as $key) {
-				if (isset($role[$key]) == false) {
-					$alt_key = str_replace(".", "_", $key);
-					$role[$key] = $role[$alt_key] ?? null;
-				}
-			}
-
-			return $role;
-		}
-
 		private function role_value($value) {
 			if ($value === null) {
 				return NO;
@@ -103,6 +90,19 @@
 			return $value;
 		}
 
+		private function fix_role_data($keys, $role) {
+			/* Work-around for PHP's nasty dot-to-underscore replacing
+			 */
+			foreach ($keys as $key) {
+				if (isset($role[$key]) == false) {
+					$alt_key = str_replace(".", "_", $key);
+					$role[$key] = $role[$alt_key] ?? NO;
+				}
+			}
+
+			return $role;
+		}
+
 		public function create_role($role) {
 			$keys = $this->get_restricted_pages();
 			$role = $this->fix_role_data($keys, $role);
@@ -114,7 +114,7 @@
 			array_unshift($keys, "id", "name", "non_admins");
 
 			$role["id"] = null;
-			$role["non_admins"] = is_true($role["non_admins"] ?? false) ? YES : NO;
+			$role["non_admins"] = is_true($role["non_admins"] ?? null) ? YES : NO;
 
 			return $this->db->insert("roles", $role, $keys) !== false;
 		}
@@ -129,7 +129,7 @@
 
 			array_unshift($keys, "name", "non_admins");
 
-			$role["non_admins"] = is_true($role["non_admins"] ?? false) ? YES : NO;
+			$role["non_admins"] = is_true($role["non_admins"] ?? null) ? YES : NO;
 
 			return $this->db->update("roles", $role["id"], $role, $keys) !== false;
 		}

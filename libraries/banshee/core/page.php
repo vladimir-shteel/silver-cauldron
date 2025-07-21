@@ -123,7 +123,7 @@
 
 			if ($this->ajax_request == false) {
 				$this_page = trim($this->url, "/");
-				if (is_array($_SESSION["previous_pages"]) == false) {
+				if (is_array($_SESSION["previous_pages"] ?? null) == false) {
 					$_SESSION["previous_pages"] = array(null, $this_page);
 				} else if ($_SESSION["previous_pages"][1] != $this_page) {
 					$_SESSION["previous_pages"][0] = $_SESSION["previous_pages"][1];

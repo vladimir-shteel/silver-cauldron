@@ -37,7 +37,6 @@ var fow_type = null;
 var fow_obj = null;
 var mouse_x = 0;
 var mouse_y = 0;
-var measuring = false;
 var measure_diff_x = 0;
 var measure_diff_y = 0;
 var door_x = 0;
@@ -110,7 +109,7 @@ function toggle_constructs() {
 
 function tokens_highlight() {
 	if ($('head style.highlight').length == 0) {
-		$('head').append('<style type="text/css" class="highlight">div.token img { border: 3px solid #ffff00 }</style>');
+		$('head').append('<style type="text/css" class="highlight">div.token img, div.character img { border: 3px solid #ffff00 }</style>');
 	} else {
 		$('head style.highlight').remove();
 	}
@@ -361,6 +360,7 @@ function object_delete(obj) {
 		obj.remove();
 
 		if ((fow_obj != null) && (obj.hasClass('wall') || obj.hasClass('door') || obj.hasClass('blinder'))) {
+			fog_of_war_index_constructs();
 			fog_of_war_update(fow_obj);
 		}
 	});
@@ -656,6 +656,12 @@ function object_name(obj) {
 				$(this).close();
 			}
 		},
+		open: function() {
+			var input = wf_name.find('input#name');
+			var length = input.val().length;
+			input.focus();
+			input[0].setSelectionRange(length, length);
+		},
 		close: function() {
 			wf_name.destroy();
 			delete body;
@@ -783,9 +789,9 @@ function object_token_context_menu(objects) {
 function measuring_stop() {
 	$('div.playarea').off('mousemove');
 	$('div.ruler').remove();
-	$('p.measure').removeClass('measure');
 
-	measuring = false;
+	$('p.measure').text('Distance: ' + $('p.measure').text());
+	$('p.measure').removeClass('measure');
 }
 
 /* Blinder functions
@@ -957,6 +963,7 @@ function blinder_create_action(pos1_x, pos1_y, pos2_x, pos2_y) {
 		});
 
 		if (fow_obj != null) {
+			fog_of_war_index_constructs();
 			fog_of_war_update(fow_obj);
 		}
 	}).fail(function(data) {
@@ -1126,6 +1133,7 @@ function door_create_action(pos_x, pos_y, length, direction, state) {
 		});
 
 		if (fow_obj != null) {
+			fog_of_war_index_constructs();
 			fog_of_war_update(fow_obj);
 		}
 	}).fail(function(data) {
@@ -1375,6 +1383,7 @@ function wall_create_action(pos_x, pos_y, length, direction, transparent) {
 		});
 
 		if (fow_obj != null) {
+			fog_of_war_index_constructs();
 			fog_of_war_update(fow_obj);
 		}
 	}).fail(function(data) {
@@ -1688,8 +1697,6 @@ function context_menu_handler(key) {
 			$('div.playarea').one('click', function(event) {
 				measuring_stop();
 			});
-
-			measuring = true;
 			break;
 		case 'door_bars':
 			obj.attr('bars', 'yes');
@@ -1706,6 +1713,7 @@ function context_menu_handler(key) {
 			});
 
 			if (fow_obj != null) {
+				fog_of_war_index_constructs();
 				fog_of_war_update(fow_obj);
 			}
 			break;
@@ -1776,6 +1784,7 @@ function context_menu_handler(key) {
 			});
 
 			if (fow_obj != null) {
+				fog_of_war_index_constructs();
 				fog_of_war_update(fow_obj);
 			}
 			break;
@@ -2073,16 +2082,10 @@ $(document).ready(function() {
 			});
 		});
 
-		var icon_selector_stop = function() {
+		$('div.playarea').one('mouseup mouseleave', function() {
 			$('div.playarea').off('mousemove');
 			$('div.playarea').off('mouseup');
 			$('div.playarea div.icon-selector').remove();
-		};
-
-		$('div.playarea').one('mouseleave', icon_selector_stop);
-
-		$('div.playarea').one('mouseup', function() {
-			icon_selector_stop();
 
 			var x1 = Math.min(icon_selector_x1, icon_selector_x2);
 			var y1 = Math.min(icon_selector_y1, icon_selector_y2);

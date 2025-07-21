@@ -166,7 +166,7 @@ Create a character if you haven't yet done so. To create a new character, click 
 <div class="entries">
 <xsl:for-each select="journal/entry">
 <xsl:if test="session"><div class="session"><xsl:value-of select="session" /></div></xsl:if>
-<xsl:if test="content"><div class="entry"><span class="writer"><xsl:value-of select="writer" /></span><span class="content"><xsl:value-of select="content" disable-output-escaping="yes" /></span></div></xsl:if>
+<xsl:if test="content"><div entry_id="{@id}" user_id="{user_id}" class="entry"><span class="writer"><xsl:value-of select="writer" /></span><span class="content"><xsl:value-of select="content" /></span></div></xsl:if>
 </xsl:for-each>
 </div>
 <div class="row">
@@ -211,11 +211,12 @@ Create a character if you haven't yet done so. To create a new character, click 
 <div class="tokens">
 <xsl:for-each select="tokens/token">
 <div id="token{instance_id}" class="token" style="left:{pos_x}px; top:{pos_y}px; width:{width}px; display:none;" type="{type}" is_hidden="{hidden}" rotation="{rotation}" armor_class="{armor_class}" hitpoints="{hitpoints}" damage="{damage}" token_type="{token_type}" name="{name}">
-<xsl:if test="c_id!='' and c_found='no'">
+<xsl:if test="c_id!=''">
 <xsl:attribute name="c_id"><xsl:value-of select="c_id" /></xsl:attribute>
 <xsl:attribute name="c_name"><xsl:value-of select="c_name" /></xsl:attribute>
 <xsl:attribute name="c_src"><xsl:value-of select="c_src" /></xsl:attribute>
 <xsl:attribute name="c_hide"><xsl:value-of select="c_hide" /></xsl:attribute>
+<xsl:attribute name="c_found"><xsl:value-of select="c_found" /></xsl:attribute>
 </xsl:if>
 <xsl:if test="perc">
 <div class="hitpoints"><div class="damage" style="width:{perc}%" /></div>

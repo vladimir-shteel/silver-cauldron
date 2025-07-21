@@ -192,7 +192,7 @@
 			} else if ($this->page->parameter_value(0, "new")) {
 				/* New adventure
 				 */
-				$adventure = array();
+				$adventure = array("access" => 1);
 				$this->show_adventure_form($adventure);
 			} else if ($this->page->parameter_value(0, "market") && is_true(ENABLE_MARKET)) {
 				/* Show market

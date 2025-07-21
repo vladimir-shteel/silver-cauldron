@@ -261,8 +261,14 @@
 
 		/* Journal
 		 */
-		public function post_journal() {
-			$this->model->journal_add($_POST["adventure_id"], $_POST["content"]);
+		public function post_journal_add() {
+			if (($entry_id = $this->model->journal_add($_POST["adventure_id"], $_POST["content"])) !== false) {
+				$this->view->add_tag("entry_id", $entry_id);
+			}
+		}
+
+		public function post_journal_update() {
+			$this->model->journal_update($_POST["entry_id"], $_POST["content"]);
 		}
 
 		/* Lights

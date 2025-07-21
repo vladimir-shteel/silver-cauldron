@@ -60,7 +60,7 @@
 						/* Create token
 						 */
 						if ($this->model->create_token($_POST, $_FILES["image"]) === false) {
-							$this->view->add_message("Error creating token. Possibly, the file extension is wrong (.jpg instead of .webp).");
+							$this->view->add_message("Error creating token. Possibly, the token's image extension is wrong (.jpg instead of .webp).");
 							$this->show_token_form($_POST);
 						} else {
 							$this->user->log_action("token %d created", $this->db->last_insert_id);

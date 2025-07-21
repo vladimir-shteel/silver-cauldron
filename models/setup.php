@@ -52,9 +52,10 @@
 				return "create_dirs";
 			}
 
-			$result = $db->execute("select password from users where username=%s", "admin");
-			if ($result[0]["password"] == "none") {
-				return "credentials";
+			if (($result = $db->execute("select password from users where username=%s", "admin")) != false) {
+				if ($result[0]["password"] == "none") {
+					return "credentials";
+				}
 			}
 
 			return "done";
@@ -643,7 +644,83 @@
 				$this->settings->database_version = 3.7;
 			}
 
+			if ($this->settings->database_version === 3.7) {
+				$this->db_query("CREATE TABLE relation_connections (id int(11) NOT NULL AUTO_INCREMENT, ".
+				                "from_entity_id int(10) unsigned NOT NULL, to_entity_id int(11) unsigned NOT NULL, ".
+				                "color text NOT NULL, type tinyint(3) unsigned NOT NULL, description text NOT NULL, ".
+				                "PRIMARY KEY (id), KEY from_object_id (from_entity_id), KEY to_object_id (to_entity_id), ".
+				                "CONSTRAINT relation_connections_ibfk_2 FOREIGN KEY (from_entity_id) REFERENCES relation_entities (id), ".
+				                "CONSTRAINT relation_connections_ibfk_3 FOREIGN KEY (to_entity_id) REFERENCES relation_entities (id)) ".
+				                "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+				$this->db_query("CREATE TABLE relation_entities (id int(10) unsigned NOT NULL AUTO_INCREMENT, ".
+				                "adventure_id int(10) unsigned NOT NULL, title varchar(25) NOT NULL, color varchar(7) NOT NULL, ".
+				                "description text NOT NULL, pos_x smallint(5) unsigned NOT NULL, pos_y smallint(5) unsigned NOT NULL, ".
+				                "PRIMARY KEY (id), KEY adventure_id (adventure_id), ".
+				                "CONSTRAINT relation_entities_ibfk_1 FOREIGN KEY (adventure_id) REFERENCES adventures (id)) ".
+				                "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+
+				$this->settings->database_version = 3.8;
+			}
+
 			return true;
+		}
+
+		/* Import INSERTs from mysql.sql
+		 */
+		public function import_inserts($tables) {
+			if (count($tables) == 0) {
+				return;
+			}
+
+			if (($queries = file("../database/mysql.sql")) === false) {
+				$this->view->add_message("Can't read the database/mysql.sql file.");
+				return false;
+			}
+
+			if (($db_link = mysqli_connect(DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE)) === false) {
+				$this->view->add_message("Error while connecting to the database.");
+				return false;
+			}
+
+			foreach ($tables as $table) {
+				mysqli_query($db_link, "delete from `".$table."`");
+				mysqli_query($db_link, "alter table `".$table."` AUTO_INCREMENT=1");
+			}
+
+			$line = "";
+			foreach ($queries as $part) {
+				if (($part = trim($part)) == "") {
+					continue;
+				}
+
+				if (substr($part, 0, 2) == "--") {
+					continue;
+				}
+
+				$line .= $part;
+				if (substr($part, -1) != ";") {
+					continue;
+				}
+
+				$query = $line;
+				$line = "";
+
+				if (substr($query, 0, 6) != "INSERT") {
+					continue;
+				}
+
+				list(, $table) = explode("`", $query, 3);
+				if (in_array($table, $tables) == false) {
+					continue;
+				}
+
+				if (mysqli_query($db_link, $query) === false) {
+					$this->view->add_message("Error while executing query [%s].", $query);
+					return false;
+				}
+			}
+
+			mysqli_close($db_link);
 		}
 
 		/* Set administrator password

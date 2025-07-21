@@ -17,10 +17,6 @@
 <meta property="og:description" content="{description}" />
 <meta property="og:image" content="https://{/output/hostname}/images/cauldron_large.png" />
 <meta property="og:url" content="https://{/output/hostname}/images/cauldron_large.png" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="{title/@page}" />
-<meta name="twitter:description" content="{description}" />
-<meta name="twitter:image" content="https://{/output/hostname}/images/cauldron_large.png" />
 <link rel="apple-touch-icon" href="https://{/output/hostname}/images/cauldron_large.png" />
 <link rel="icon" href="/images/favicon.png" />
 <link rel="shortcut icon" href="/images/favicon.png" />

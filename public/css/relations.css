@@ -1,0 +1,174 @@
+div.buttons {
+	position:relative;
+	margin:0;
+	top:-43px;
+	float:right;
+}
+
+div.content entities,
+div.content connections {
+	display:none;
+}
+
+div.description {
+	white-space:pre-wrap;
+}
+
+h2 {
+	display:none;
+}
+
+/* View
+ */
+div.view {
+	position:relative;
+	padding-bottom:17px;
+	box-sizing:content-box;
+}
+
+div.entities {
+	position:absolute;
+	top:0;
+}
+
+canvas.connections {
+	position:absolute;
+	top:0;
+	background-color:#ffffff;
+}
+
+@media (max-width:767px) {
+	div.wide {	
+		top:5px;
+		bottom:115px;
+	}
+
+	div.buttons {
+		top:-80px;
+	}
+}
+
+@media (min-width:768px) {
+	form.adventures_pulldown {
+		right:170px;
+	}
+}
+
+/* Normal view
+ */
+div.normal {
+	border:1px solid #000000;
+	overflow-y:hidden;
+	overflow-x:auto;
+	width:100%;
+	height:100%;
+	top:-30px;
+}
+
+/* Wide view
+ */
+div.wide div.entities {
+	left:50%;
+	transform:translate(-50%, 0);
+	border:1px solid #000000;
+}
+
+div.wide canvas.connections {
+	left:50%;
+	transform:translate(-50%, 0);
+}
+
+/* Entities
+ */
+div.view div.entity {
+	width:100px;
+	height:50px;
+	border:1px solid #404040;
+	border-radius:4px;
+	padding:3px 5px;
+	overflow:hidden;
+	position:absolute;
+	box-shadow:4px 4px 8px #606060;
+	cursor:pointer;
+}
+
+div.view div.entity div.print {
+	display:none;
+	position:absolute;
+	top:0;
+	left:0;
+	border:50px solid;
+}
+
+/* Connections
+ */
+div.connection {
+	position:absolute;
+	width:24px;
+	height:24px;
+	cursor:pointer;
+	color:rgba(0, 0, 0, 0);
+	padding:2px;
+	text-align:center;
+}
+
+div.connection:hover {
+	color:rgba(0, 0, 0, 255);
+	background-color:#ffffff;
+	border:1px solid #000000;
+	border-radius:12px;
+}
+
+div.connection span {
+	position:relative;
+	left:-0.5px;
+}
+
+/* Print
+ */
+@media print {
+	div.header,
+	h1,
+	div.buttons,
+	form.adventures_pulldown,
+	div.connection,
+	div.footer {
+		display:none;
+	}
+
+	h2 {
+		display:block;
+	}
+
+	div.content {
+		top:0;
+		bottom:0;
+		height:0;
+	}
+
+	div.content div.container {
+		width:100%;
+		padding:0;
+	}
+
+	div.view {
+		padding-bottom:0;
+	}
+
+	div.view,
+	div.entities {
+		top:0;
+		bottom:0;
+		border:none;
+	}
+
+	div.view div.entity span {
+		display:block;
+		position:relative;
+		z-index:1;
+	}
+
+	div.view div.entity div.print {
+		display:block;
+	}
+}

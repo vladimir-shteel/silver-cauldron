@@ -35,17 +35,29 @@
 
 			if ($this->valid_number($token["width"], "Width") == false) {
 				$result = false;
+			} else if ($token["width"] > 50) {
+				$this->view->add_message("Width too high.");
+				$result = false;
 			}
 
 			if ($this->valid_number($token["height"], "Height") == false) {
+				$result = false;
+			} else if ($token["height"] > 50) {
+				$this->view->add_message("Height too high.");
 				$result = false;
 			}
 
 			if ($this->valid_number($token["armor_class"], "Armor class") == false) {
 				$result = false;
+			} else if ($token["armor_class"] > 250) {
+				$this->view->add_message("Armor class too high.");
+				$result = false;
 			}
 
 			if ($this->valid_number($token["hitpoints"], "Hit points") == false) {
+				$result = false;
+			} else if ($token["hitpoints"] > 65000) {
+				$this->view->add_message("Hitpoints too high.");
 				$result = false;
 			}
 

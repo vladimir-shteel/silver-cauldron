@@ -8,14 +8,32 @@
 			return null;
 		}
 
-		public function get_adventures() {
+		public function get_my_adventures($all = false) {
 			if ($this->user->id == null) {
 				return false;
 			}
 
-			$query = "select * from adventures where dm_id=%d order by title";
+			$query = "select * from adventures where dm_id=%d";
+			if (($result = $this->db->execute($query, $this->user->id)) === false) {
+				return false;
+			}
 
-			return $this->db->execute($query, $this->user->id);
+			if ($all) {
+				$query = "select a.* from adventures a, adventure_character l, characters c ".
+				         "where a.id=l.adventure_id and l.character_id=c.id and c.user_id=%d";
+
+				if (($adventures = $this->db->execute($query, $this->user->id)) === false) {
+					return false;
+				}
+
+				$result = array_merge($result, $adventures);
+
+				usort($result, function($a, $b) {
+					return strcmp($a["title"], $b["title"]);
+				});
+			}
+
+			return $result;
 		}
 
 		public function is_my_adventure($adventure_id) {

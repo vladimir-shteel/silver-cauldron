@@ -98,7 +98,7 @@
 
 		private function show_icalendar() {
 			if ($this->user->logged_in) {
-				$organisation_id = null;
+				$organisation_id = $this->user->organisation_id;
 			} else if ($this->page->parameter_numeric(0) && $this->page->parameter_value(1)) {
 				if (($resources_key = $this->model->get_resources_key($this->page->parameters[0])) == false) {
 					return false;

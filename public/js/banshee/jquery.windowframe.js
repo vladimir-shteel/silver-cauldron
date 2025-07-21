@@ -105,7 +105,7 @@
 			var info_window = $('<div>' + settings.info + '</div>').windowframe({
 				header: 'Info',
 				width: 515,
-				style: 'info',
+				style: settings.style,
 				activator: 'div#windowframe' + id + ' span.glyphicon-info-sign'
 			});
 
@@ -126,7 +126,6 @@
 		});
 
 		if (settings.activator != undefined) {
-			$(settings.activator).attr('id', 'windowframe' + id);
 			$(settings.activator).click(function() {
 				element.open();
 			});

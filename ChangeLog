@@ -1,3 +1,13 @@
+cauldron (3.8) stable; urgency=low
+
+  * Added relations module.
+  * Critical damage roll via dice roll window.
+  * Edit and delete journal entries.
+  * Fog of War performance improvements. Many thanks to Jamster.
+  * Small bugfixes and improvements.
+
+ -- Hugo Leisink <hugo@leisink.net>  Mon, 21 Jul 2025 12:29:11 +0200
+
 cauldron (3.7) stable; urgency=low
 
   * Added Fog of War brush for manually reveal mode.

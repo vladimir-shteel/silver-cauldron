@@ -1,4 +1,4 @@
-const COMBAT_MAX_ENEMIES = 5;
+const COMBAT_MAX_ENEMIES = 10;
 
 var _combat_window_init = null;
 var _combat_window_remove = null;
@@ -79,11 +79,9 @@ function combat_stop() {
 			action: 'done'
 		};
 		websocket_send(data);
-	} else {
-		temporary_hitpoints = 0;
 	}
 
-	message_to_sidebar('Dungeon Master', 'The combat is over.');
+	message_to_sidebar('The combat is over.', 'Dungeon Master');
 }
 
 function _combat_add_buttons() {
@@ -299,7 +297,7 @@ function combat_show_order(first_round = false, send = true) {
 	if (send) {
 		send_message(message, _combat_name);
 	} else {
-		message_to_sidebar(_combat_name, message);
+		message_to_sidebar(message, _combat_name);
 	}
 }
 

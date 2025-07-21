@@ -65,7 +65,6 @@
 				if (($session = $this->model->get_session($this->page->parameters[0])) == false) {
 					$this->view->add_tag("result", "Session not found.");
 				} else {
-					$session["expire"] = date_string("Y-m-d H:i:s", $session["expire"]);
 					$this->show_session_form($session);
 				}
 			} else {

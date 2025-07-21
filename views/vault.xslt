@@ -28,7 +28,7 @@
 <div id="help">
 <p>The Dungeon Master's Vault is where you as a Dungeon Master maintain your adventures and the accounts of your players.</p>
 <p>If you want to create a new adventure, start by clicking the Adventures icon.</p>
-<p>You can ask <a href="/cauldey">Cauldey</a> to help you creating your first adventure.</p>
+<p>You can ask <a href="/cauldey">Cauldey</a> to help you create your first adventure.</p>
 </div>
 </xsl:template>
 

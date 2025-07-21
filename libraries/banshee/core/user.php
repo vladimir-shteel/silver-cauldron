@@ -135,8 +135,8 @@
 		 * ERROR:  -
 		 */
 		public function login_password($username, $password, $code = null) {
-			$query = "select * from users where username=%s and status!=%d limit 1";
-			if (($data = $this->db->execute($query, $username, USER_STATUS_DISABLED)) == false) {
+			$query = "select * from users where (username=%s or email=%s) and status!=%d limit 1";
+			if (($data = $this->db->execute($query, $username, $username, USER_STATUS_DISABLED)) == false) {
 				sleep(1);
 
 				return false;
