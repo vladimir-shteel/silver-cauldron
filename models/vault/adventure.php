@@ -1,9 +1,9 @@
 <?php
 	class vault_adventure_model extends cauldron_model {
 		public function get_adventures() {
-			$query = "select *, (select count(*) from adventure_character where adventure_id=a.id) as players, ".
+			$query = "select a.*, (select count(*) from adventure_character where adventure_id=a.id) as players, r.name as rule_system, ".
 			         "(select count(*) from maps where adventure_id=a.id) as maps ".
-			         "from adventures a where dm_id=%d order by title";
+			         "from adventures a, rule_systems r where a.rule_system_id=r.id and dm_id=%d order by title";
 
 			return $this->db->execute($query, $this->user->id);
 		}
@@ -21,6 +21,20 @@
 			}
 
 			return $cache[$adventure_id];
+		}
+
+		public function get_rule_systems($show_all) {
+			$query = "select id, name from rule_systems ";
+			if ($show_all == false) {
+				$query .= "where visible=%d ";
+			}
+			$query .= "order by name";
+
+			return $this->db->execute($query, YES);
+		}
+
+		public function get_rule_system($rule_system_id) {
+			return $this->db->entry("rule_systems", $rule_system_id);
 		}
 
 		public function save_okay($adventure) {
@@ -54,7 +68,7 @@
 		}
 
 		public function create_adventure($adventure) {
-			$keys = array("id", "title", "image", "introduction", "dm_id", "access", "story", "notes");
+			$keys = array("id", "rule_system_id", "title", "image", "introduction", "dm_id", "access", "story", "notes");
 
 			$adventure["id"] = null;
 			$adventure["title"] = substr($adventure["title"], 0, 50);
@@ -63,7 +77,21 @@
 			$adventure["story"] = "";
 			$adventure["notes"] = "";
 
-			return $this->db->insert("adventures", $adventure, $keys) !== false;
+			if ($this->load_rule_system($adventure["rule_system_id"]) !== false) {
+				$custom_values = min(ADVENTURE_CUSTOM_OPTIONS, count($this->rule_system->adventure_custom_values));
+				for ($i = 0; $i < $custom_values; $i++) {
+					$key = "custom".$i;
+					array_push($keys, $key);
+					$adventure[$key] = $this->rule_system->adventure_custom_values[$i];
+				}
+			}
+
+			if ($this->db->insert("adventures", $adventure, $keys) === false) {	
+				return false;
+			}
+			$adventure_id = $this->db->last_insert_id;
+
+			return $adventure_id;
 		}
 
 		public function update_adventure($adventure) {
@@ -273,6 +301,10 @@
 			$maps = $adventure["maps"];
 			unset($adventure["maps"]);
 
+			if (isset($adventure["rule_system_id"]) == false) {
+				$adventure["rule_system_id"] = 2;
+			}
+
 			$this->db->query("begin");
 
 			if ($this->create_adventure($adventure) == false) {
@@ -318,6 +350,11 @@
 						"armor_class" => (int)$token["armor_class"],
 						"hitpoints"   => (int)$token["hitpoints"],
 						"damage"      => (int)($token["damage"] ?? 0));
+
+					for ($i = 0; $i < TOKEN_CUSTOM_OPTIONS; $i++) {
+						$key = "custom".$i;
+						$data[$key] = (int)($token[$key] ?? 0);
+					}
 
 					if ($this->db->insert("map_token", $data) === false) {
 						$this->view->add_message("Error placing token.");

@@ -14,7 +14,7 @@
 			static $tokens = array();
 
 			if (isset($tokens[$token_id]) == false) {
-				if (($token = $this->db->entry("tokens", $token_id)) === false) {
+				if (($token = $this->db->entry("tokens", $token_id)) == false) {
 					return false;
 				}
 

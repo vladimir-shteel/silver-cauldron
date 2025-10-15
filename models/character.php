@@ -1,9 +1,27 @@
 <?php
-	class character_model extends Banshee\model {
+	class character_model extends cauldron_model {
+		/* Rule system functions
+		 */
+		public function get_rule_systems() {
+			$query = "select * from rule_systems where visible=%d order by name";
+
+			return $this->db->execute($query, YES);
+		}
+
+		public function get_character_rule_system($character_id) {
+			$query = "select * from characters where id=%d and user_id=%d";
+
+			if (($character = $this->db->execute($query, $character_id, $this->user->id)) === false) {
+				return false;
+			}
+
+			return $character[0]["rule_system_id"];
+		}
+
 		/* Character functions
 		 */
 		public function get_characters() {
-			$query = "select c.*, a.title from characters c ".
+			$query = "select c.*, a.title as adventure from characters c ".
 			         "left join adventure_character p on c.id=p.character_id ".
 			         "left join adventures a on p.adventure_id=a.id ".
 			         "where user_id=%d order by name";
@@ -80,26 +98,16 @@
 			return $result;
 		}
 
-		private function valid_number($number, $label) {
-			if (is_numeric($number) == false) {
-				$this->view->add_message("Invalid ".strtolower($label).".");
-				return false;
-			} else if ($number < 1) {
-				$this->view->add_message($label." too low.");
-				return false;
-			}
-
-			return true;
-		}
-
 		public function save_okay($character, $token, $sheet) {
 			$result = true;
 
 			if (isset($character["id"])) {
-				if ($this->get_character($character["id"]) == false) {
+				if (($current = $this->get_character($character["id"])) == false) {
 					$this->view->add_message("Character not found.");
 					$result = false;
 				}
+
+				$character["rule_system_id"] = $current["rule_system_id"];
 			} else {
 				$query = "select count(*) as count from characters where user_id=%d";
 				if (($count = $this->db->execute($query, $this->user->id)) === false) {
@@ -126,25 +134,12 @@
 				}
 			}
 
-			if ($this->valid_number($character["hitpoints"], "Hit points") == false) {
-				$result = false;
-			} else if ($character["hitpoints"] > 65000) {
-				$this->view->add_message("Hit points too high.");
-				$result = false;
+			if ($this->load_rule_system($character["rule_system_id"]) == false) {
+				$this->view->add_tag("result", "Rule system error.");
+				return;
 			}
 
-			if ($this->valid_number($character["armor_class"], "Armor class") == false) {
-				$result = false;
-			} else if ($character["armor_class"] > 250) {
-				$this->view->add_message("Armor class too high.");
-				$result = false;
-			}
-
-			if (is_numeric($character["initiative"]) == false) {
-				$this->view->add_message("Invalid initiative bonus.");
-				$result = false;
-			} else if (($character["initiative"] < -32000) || ($character["initiative"] > 32000)) {
-				$this->view->add_message("Initiative bonus out of range.");
+			if ($this->rule_system->character_valid_values($character) == false) {
 				$result = false;
 			}
 
@@ -185,18 +180,37 @@
 		}
 
 		public function create_character($character, $token, $sheet) {
-			$keys = array("id", "user_id", "name", "initiative", "armor_class", "hitpoints", "damage", "vision", "token_type", "extension", "sheet", "sheet_url");
+			$keys = array("id", "user_id", "rule_system_id", "name", "initiative", "armor_class",
+			              "hitpoints", "damage", "vision", "token_type", "extension", "sheet", "sheet_url");
+
+
+			if ($this->load_rule_system($character["rule_system_id"]) == false) {
+				$this->view->add_tag("result", "Rule system error.");
+				return;
+			}
 
 			$character["id"] = null;
 			$character["name"] = substr($character["name"], 0, 20);
 			$character["user_id"] = $this->user->id;
-			$character["initiative"] = (int)$character["initiative"];
-			$character["hitpoints"] = (int)$character["hitpoints"];
 			$character["damage"] = 0;
 			$character["vision"] = 1;
 			$character["extension"] = "";
 			if ($character["sheet"] == "none") {
 				$character["sheet_url"] = null;
+			}
+
+			foreach (CHARACTER_OPTIONS as $option) {
+				if (isset($character[$option]) == false) {
+					$character[$option] = null;
+				}
+			}
+
+			for ($i = 0; $i < CHARACTER_CUSTOM_OPTIONS; $i++) {
+				$key = "custom".$i;
+				array_push($keys, $key);
+				if (isset($character[$key]) == false) {
+					$character[$key] = null;
+				}
 			}
 
 			if ($this->db->insert("characters", $character, $keys) === false) {
@@ -231,6 +245,20 @@
 			$keys = array("name", "initiative", "armor_class", "hitpoints", "sheet", "sheet_url");
 
 			$character["name"] = substr($character["name"], 0, 20);
+
+			foreach (CHARACTER_OPTIONS as $option) {
+				if (isset($character[$option]) == false) {
+					$character[$option] = null;
+				}
+			}
+
+			for ($i = 0; $i < CHARACTER_CUSTOM_OPTIONS; $i++) {
+				$key = "custom".$i;
+				array_push($keys, $key);
+				if (isset($character[$key]) == false) {
+					$character[$key] = null;
+				}
+			}
 
 			if ($token["error"] == 0) {
 				if (($current = $this->get_character($character["id"])) == false) {

@@ -69,6 +69,11 @@
 			include_once($file);
 		} else if (file_exists($file = $path."/".$class.".php")) {
 			include_once($file);
+		} else if (substr($class, -12) == "_rule_system") {
+			$class = substr($class, 0, -12);
+			if (file_exists($file = $path."/rule_systems/".strtolower($class).".php")) {
+				include_once($file);
+			}
 		}
 	}
 

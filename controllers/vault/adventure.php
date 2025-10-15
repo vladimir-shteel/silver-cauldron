@@ -21,6 +21,11 @@
 		}
 
 		private function show_adventure_form($adventure) {
+			if (($rule_systems = $this->model->get_rule_systems(isset($adventure["id"]))) == false) {
+				$this->view->add_tag("result", "Database error.");
+				return;
+			}
+
 			$this->view->add_javascript("vault/adventure.js");
 
 			$this->view->open_tag("edit");
@@ -29,6 +34,12 @@
 			$this->view->open_tag("access");
 			foreach ($adventure_access_levels as $level => $label) {
 				$this->view->add_tag("level", $label, array("value" => $level));
+			}
+			$this->view->close_tag();
+
+			$this->view->open_tag("rule_systems");
+			foreach ($rule_systems as $rule_system) {
+				$this->view->add_tag("rule_system", $rule_system["name"], array("id" => $rule_system["id"]));
 			}
 			$this->view->close_tag();
 
@@ -117,14 +128,13 @@
 					} else if (isset($_POST["id"]) === false) {
 						/* Create adventure
 						 */
-						if ($this->model->create_adventure($_POST) === false) {
+						if (($adventure_id = $this->model->create_adventure($_POST)) === false) {
 							$this->view->add_message("Error creating adventure.");
 							$this->show_adventure_form($_POST);
 						} else {
-							$new_adventure_id = $this->db->last_insert_id;
-							$_SESSION["edit_adventure_id"] = $new_adventure_id;
+							$_SESSION["edit_adventure_id"] = $adventure_id;
 
-							$this->user->log_action("adventure %d created", $new_adventure_id);
+							$this->user->log_action("adventure %d created", $adventure_id);
 
 							$this->view->add_tag("result", "Adventure created.");
 							header("Location: /vault/map?first");
@@ -192,7 +202,7 @@
 			} else if ($this->page->parameter_value(0, "new")) {
 				/* New adventure
 				 */
-				$adventure = array("access" => 1);
+				$adventure = array("rule_system_id" => 2, "access" => 1);
 				$this->show_adventure_form($adventure);
 			} else if ($this->page->parameter_value(0, "market") && is_true(ENABLE_MARKET)) {
 				/* Show market

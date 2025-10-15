@@ -1,14 +1,14 @@
 $(document).ready(function() {
 	var sides = [4, 6, 8, 10, 12, 20];
 
-	var select_type = '<label for="type">Dice type:</label>';
+	var select_type = '<div class="form-group"><label for="type">Dice type:</label>';
 	select_type += '<select id="type" class="form-control">';
 	sides.forEach(function(side) {
 		select_type += '<option value="' + side + '">d' + side + '</option>';
 	});
-	select_type += '</select>';
+	select_type += '</select></div>';
 
-	$('input#name').after(select_type);
+	$('div.form-group').first().after(select_type);
 
 	var sides = $('div#sides input').length;
 	if (sides > 0) {

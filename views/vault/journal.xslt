@@ -54,10 +54,14 @@
 <input type="hidden" name="id" value="{entry/@id}" />
 </xsl:if>
 
+<div class="form-group">
 <label for="content">Player:</label>
 <input type="input" readonly="readonly" name="fullname" value="{entry/fullname}" class="form-control" />
+</div>
+<div class="form-group">
 <label for="content">Entry:</label>
 <textarea id="content" name="content" class="form-control"><xsl:value-of select="entry/content" /></textarea>
+</div>
 
 <div class="btn-group">
 <input type="submit" name="submit_button" value="Save entry" class="btn btn-default" />

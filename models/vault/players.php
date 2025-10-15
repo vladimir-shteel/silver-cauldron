@@ -21,9 +21,10 @@
 		public function get_characters($adventure_id) {
 			$query = "select c.*, u.fullname, u.id as user_id, ".
 			         "(select count(*) from adventure_character where character_id=c.id) as busy, ".
-			         "(select count(*) from adventure_character where character_id=c.id and adventure_id=%d) as enrolled ".
-			         "from characters c, users u where c.user_id=u.id and u.organisation_id=%d ".
-			         "and u.id!=%d having busy=%d or enrolled=%d order by u.fullname, c.name";
+			         "(select count(*) from adventure_character where character_id=c.id and adventure_id=a.id) as enrolled ".
+			         "from characters c, users u, adventures a where c.user_id=u.id and a.id=%d and ".
+			         "a.rule_system_id=c.rule_system_id and u.organisation_id=%d and u.id!=%d ".
+			         "having busy=%d or enrolled=%d order by u.fullname, c.name";
 
 			if (($characters = $this->db->execute($query, $adventure_id, $this->user->organisation_id, $this->user->id, 0, 1)) === false) {
 				return false;

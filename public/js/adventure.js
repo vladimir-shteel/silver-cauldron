@@ -51,7 +51,6 @@ var my_name = null;
 var character_name = null;
 var character_steerable = true;
 var my_character = null;
-var wf_attack = null;
 var wf_audio_player = null;
 var wf_collectables = null;
 var wf_effect_create = null;
@@ -94,7 +93,6 @@ var ruler_distance = 0;
 var ruler_previous = 0;
 var key_to_direction = null;
 var brushes = {};
-var sea_submenu = null;
 var mobile_device = false;
 var player_notes = null;
 
@@ -247,6 +245,13 @@ function toggle_fullscreen() {
 	playarea.trigger('focus');
 }
 
+function playarea_click() {
+	if (focus_obj != null) {
+		focus_obj.find('img').css('border', '');
+		focus_obj = null;
+	}
+}
+
 function write_sidebar(message) {
 	var sidebar = $('div.sidebar');
 	message = message.replace(/\n/g, '<br />');
@@ -267,13 +272,6 @@ function show_image(img) {
 	$('body div.image_overlay').show();
 }
 
-function make_spell_link(text, offset) {
-	var spell = text.substring(offset);
-	var link = spell.replace(/'/g, '\\\'').replace(/"/g, '');
-
-	return '<a href="javascript:show_spells(\'' + link + '\')">' + spell + '</a>';
-}
-
 function message_to_sidebar(message, name = null) {
 	/* Special messages
 	 */
@@ -287,8 +285,6 @@ function message_to_sidebar(message, name = null) {
 		} else {
 			message = '<a href="' + message + '" target="_blank">' + message + '</a>';
 		}
-	} else if (message.substring(0, 9) == 'Casting: ') {
-		message = 'Casting ' + make_spell_link(message, 9) + '.';
 	} else {
 		message = message.replace(/</g, '&lt;');
 
@@ -318,40 +314,31 @@ function message_to_sidebar(message, name = null) {
 				tag = tag.substring(0, space);
 			}
 
-			if ((close = message.indexOf('[/' + tag + ']', end)) != -1) {
-				content = message.substring(end + 1, close);
-				end = close + tag.length + 2;
+			if ((close = message.indexOf('[/' + tag + ']', end)) == -1) {
+				continue;
 			}
 
-			var replacement = (content != null) ? content : '';
+			content = message.substring(end + 1, close);
+			end = close + tag.length + 2;
 
-			switch (tag) {
-				case 'b':
-					if (content == null) {
+			var replacement = rule_system_sidebar_message_bbcode(tag, content);
+			if (replacement === false) {
+				switch (tag) {
+					case 'b':
+						replacement = '<b>' + content + '</b>';
+						break;
+					case 'target':
+						if (params == null) {
+							continue;
+						}
+
+						var mouse_over = 'onMouseOver="javascript:highlight_target(\'' + params + '\')"';
+						var mouse_out = 'onMouseOut="javascript:unhighlight_target(\'' + params + '\')"';
+						replacement = '<span ' + mouse_over + '' + mouse_out + ' class="target">' + content + '</span>';
+						break;
+					default:
 						continue;
-					}
-					replacement = '<b>' + content + '</b>';
-					break;
-				case 'target':
-					if ((params == null) || (content == null)) {
-						continue;
-					}
-
-					var mouse_over = 'onMouseOver="javascript:highlight_target(\'' + params + '\')"';
-					var mouse_out = 'onMouseOut="javascript:unhighlight_target(\'' + params + '\')"';
-					replacement = '<span ' + mouse_over + '' + mouse_out + ' class="target">' + content + '</span>';
-					break;
-				case 'spell':
-					if (content == null) {
-						continue;
-					}
-
-					var link = content.replace(/'/g, '\\\'').replace(/"/g, '');
-
-					replacement = '<a href="javascript:show_spells(\'' + link + '\')">' + content + '</a>';
-					break;
-				default:
-					continue;
+				}
 			}
 
 			message = message.substring(0, begin) + replacement + message.substring(end + 1);
@@ -428,25 +415,25 @@ function show_help() {
 		'whisper &lt;name&gt;|dm &lt;message&gt;': 'Send a message to a specific player or character or the Dungeon Master.'
 	};
 
-	var extra = dungeon_master ? {
-		'add &lt;name&gt;':      'Add NPC to the combat and make it its turn.',
-		'combat':                'Start a new combat.',
+	var commands_dm = {
 		'dmroll &lt;dice&gt;':   'Privately roll dice.',
-		'done':                  'End the combat.',
-		'next [&lt;name&gt;]':   'Next turn in combat.',
 		'night 0-4':             'Set map night mode.',
 		'noscript':              'Disable all zone scripts.',
 		'ping':                  'See who\'s online in the session.',
 		'reload':                'Force everyone in the session to reload the map.',
-		'remove &lt;name&gt;':   'Remove one from the combat.',
 		'walls hide|show':       'Manage walls and windows visibility.'
-	} : {
-		'damage &lt;points&gt;': 'Damage your character.',
-		'heal &lt;points&gt;':   'Heal your character.'
 	};
 
+	var commands_rs = {};
+
+	if (dungeon_master) {
+		commands_rs = rule_system_help_dm();
+	} else {
+		commands_rs = rule_system_help_player();
+	}
+
 	var help = [];
-	Object.assign(commands, extra);
+	Object.assign(commands, commands_dm, commands_rs);
 	for (const [key, value] of Object.entries(commands)) {
 		help.push('<span class="help"><b>/' + key + '</b>: ' + value + '</span>');
 	}
@@ -512,6 +499,67 @@ function interface_color(button, swap = true) {
 	}
 }
 
+/* Adventure functions
+ */
+function adventure_custom_value(key) {
+	return parseInt($('div.playarea').attr('custom' + key));
+}
+
+function adventure_custom_value_command(key, value) {
+	adventure_custom_value_action(key, value);
+
+    var data = {
+        action: 'adventure_custom_value',
+		key: key,
+        value: value
+    };
+    websocket_send(data);
+
+    $.post('/object/adventure_custom_value', {
+		adventure_id: adventure_id,
+		key: key,
+		value: value
+    });
+}
+
+function adventure_custom_value_action(key, value) {
+	$('div.playarea').attr('custom' + key, value);
+
+	rule_system_adventure_custom_value(key, value);
+}
+
+/* Character functions
+ */
+function character_custom_value(key, obj = my_character) {
+	return parseInt(obj.attr('custom' + key));
+}
+
+function character_custom_value_command(key, value) {
+	if (dungeon_master) {
+		return;
+	}
+
+    character_custom_value_action(my_character, key, value);
+
+    var data = {
+        action: 'character_custom_value',
+        instance_id: my_character.prop('id'),
+		key: key,
+        value: value
+    };
+    websocket_send(data);
+
+    $.post('/object/character_custom_value', {
+        instance_id: my_character.prop('id'),
+		key: key,
+		value: value
+    });
+}
+
+function character_custom_value_action(obj, key, value) {
+    obj.attr('custom' + key, value);
+}
+
 function character_vision(obj) {
 	var char_vision = obj.attr('vision');
 
@@ -526,30 +574,6 @@ function character_vision(obj) {
 	}
 
 	return Math.max(char_vision, fow_map_distance);
-}
-
-function temporary_hitpoints(points = null) {
-	var temporary_hitpoints = localStorage.getItem('temp_hp');
-
-	if (temporary_hitpoints == undefined) {
-		temporary_hitpoints = {};
-	} else {
-		temporary_hitpoints = JSON.parse(temporary_hitpoints);
-	}
-
-	if (temporary_hitpoints[character_id] == undefined) {
-		temporary_hitpoints[character_id] = 0;
-	}
-
-	if (points !== null) {
-		temporary_hitpoints[character_id] = points;
-	}
-
-	localStorage.setItem('temp_hp', JSON.stringify(temporary_hitpoints));
-
-	if (points === null) {
-		return temporary_hitpoints[character_id];
-	}
 }
 
 /* Object functions
@@ -622,30 +646,12 @@ function object_contextmenu_dm(event) {
 		menu_entries['focus'] = { name:'Focus', icon:'fa-binoculars' };
 		menu_entries['zone_create'] = { name:'Create zone', icon:'fa-square-o' };
 		menu_entries['sep3'] = '-';
-		menu_entries['sea'] = sea_submenu;
-		menu_entries['attack'] = { name:'Attack', icon:'fa-legal' };
 
-		var hitpoints = parseInt(obj.attr('hitpoints'));
-		if (hitpoints > 0) {
-			menu_entries['damage'] = { name:'Damage', icon:'fa-warning' };
-			menu_entries['heal'] = { name:'Heal', icon:'fa-medkit' };
+		rule_system_menu_token_dm(menu_entries, obj);
+		if (object_last_item(menu_entries) != '-') {
+			menu_entries['sep4'] = '-';
 		}
-		menu_entries['armor'] = { name:'Set armor class', icon:'fa-shield' };
-		
-		var has = obj.find('span.conditions').text().split(',');
-		var conditions = {};
-		conditions['condition_0'] = { name: 'None' };
-		conditions['sep0'] = '-';
-		$('div.conditions div').each(function() {
-			var con_id = $(this).attr('con_id');
-			var name = $(this).text();
-			var icon = has.includes(name) ? 'fa-check-square-o' : 'fa-square-o';
-			conditions['condition_' + con_id] = { name: name, icon: icon};
-		});
 
-		menu_entries['sep4'] = '-';
-		menu_entries['conditions'] = { name:'Set condition', icon:'fa-heartbeat', items:conditions};
-		menu_entries['sep5'] = '-';
 		menu_entries['lower'] = { name:'Lower', icon:'fa-arrow-down' };
 		menu_entries['delete'] = { name:'Delete', icon:'fa-trash' };
 	}
@@ -658,15 +664,17 @@ function object_contextmenu_dm(event) {
 function object_contextmenu_player(event) {
 	$('div.selected').removeClass('selected');
 
-	var menu_entries = {
-		'view': { name:'View', icon:'fa-search' },
-		'sep1': '-',
-		'sea': sea_submenu,
-		'attack': { name:'Attack', icon:'fa-legal' },
-		'sep2': '-',
-		'marker': { name:'Set marker', icon:'fa-map-marker' },
-		'distance': { name:'Measure distance', icon:'fa-map-signs' }
-	};
+	var menu_entries = {};
+	menu_entries['view'] = { name:'View', icon:'fa-search' };
+	menu_entries['sep1'] = '-';
+
+	rule_system_menu_token_player(menu_entries, $(event.target).parent());
+	if (object_last_item(menu_entries) != '-') {
+		menu_entries['sep2'] = '-';
+	}
+
+	menu_entries['marker'] = { name:'Set marker', icon:'fa-map-marker' };
+	menu_entries['distance'] = { name:'Measure distance', icon:'fa-map-signs' };
 
 	context_menu_show($(this), event, menu_entries, context_menu_handler, menu_defaults);
 	return false;
@@ -756,60 +764,6 @@ function object_create(icon, x, y) {
 	}).fail(function() {
 		write_sidebar('Error creating object.');
 	});
-}
-
-function object_damage_command(obj, points) {
-	var hitpoints = parseInt(obj.attr('hitpoints'));
-	var damage = parseInt(obj.attr('damage'));
-
-	if (obj.is(my_character) && (points > 0)) {
-		if ((points -= temporary_hitpoints()) <= 0) {
-			temporary_hitpoints(-points);
-			return;
-		}
-
-		temporary_hitpoints(0);
-	}
-
-	damage += points;
-
-	if (damage > hitpoints) {
-		damage = hitpoints;
-	} else if (damage < 0) {
-		damage = 0;
-	}
-
-	var perc = Math.floor(100 * damage / hitpoints).toString() + '%';
-
-	object_damage_action(obj, damage, perc);
-
-	var data = {
-		action: 'damage',
-		instance_id: obj.prop('id'),
-		damage: damage,
-		perc: perc
-	};
-	websocket_send(data);
-
-	$.post('/object/damage', {
-		instance_id: obj.prop('id'),
-		damage: damage
-	});
-
-	if (dungeon_master) {
-		obj.attr('title', 'HP: ' + (hitpoints - damage));
-	}
-}
-
-function object_damage_action(obj, damage, percentage) {
-	obj.attr('damage', damage);
-	obj.find('div.damage').css('width', percentage);
-
-	if (percentage == '100%') {
-		object_dead(obj);
-	} else {
-		object_alive(obj);
-	}
 }
 
 function object_dblclick(event) {
@@ -966,28 +920,10 @@ function object_info(obj) {
 			if (obj.attr('id').substring(0, 5) == 'token') {
 				info += 'Type: ' + obj.attr('type') + '<br />';
 			}
-			info += 'Armor class: ' + obj.attr('armor_class') + '<br />';
 		}
 
-		info += 'Max hit points: ' + obj.attr('hitpoints') + '<br />';
-
-		var hitpoints = parseInt(obj.attr('hitpoints'))
-
-		if (hitpoints > 0) {
-			var remaining = hitpoints - parseInt(obj.attr('damage'));
-			info +=
-				'Damage: ' + obj.attr('damage') + '<br />' +
-				'Hit points: ' + remaining.toString() + '<br />';
-		}
-
-		if (obj.is(my_character)) {
-			info += 'Temp, hit points: ' + temporary_hitpoints().toString() + '<br />';
-		}
-
-		if (obj.hasClass('character')) {
-			info += 'Initiative bonus: ' + obj.attr('initiative') + '<br />';
-
-			if (dungeon_master) {
+		if (dungeon_master && obj.hasClass('character')) {
+			if ((fow_type == FOW_NIGHT_CELL) || (fow_type == FOW_NIGHT_REAL)) {
 				var vision = character_vision(obj);
 				if (vision == 0) {
 					vision = 'infinite';
@@ -998,11 +934,7 @@ function object_info(obj) {
 			}
 		}
 
-		var conditions = obj.find('span.conditions');
-		if (conditions.length > 0) {
-			conditions = conditions.html().replace(/>/g, '>- ');
-			info += 'Conditions:<br />- ' + conditions;
-		}
+		info += rule_system_object_info(obj);
 	} else {
 		script = obj.find('div.script');
 		if (script.length > 0) {
@@ -1593,6 +1525,8 @@ function effect_create_final(effect_id, src, width, height) {
 function measuring_stop() {
 	$('div.playarea').off('mousemove');
 	$('div.playarea').off('click');
+	$('div.playarea').on('click', playarea_click);
+
 	$('div.ruler').remove();
 
 	$('p.measure').text('Distance: ' + $('p.measure').text());
@@ -2533,71 +2467,6 @@ function journal_filter_clear() {
 	journal_filter_reset();
 }
 
-/* Condition functions
- */
-function save_conditions(obj, condition) {
-	var conditions = localStorage.getItem('conditions');
-	if (conditions == undefined) {
-		conditions = {};
-	} else {
-		conditions = JSON.parse(conditions);
-	}
-
-	var key = obj.prop('id');
-	if (condition != '') {
-		conditions[key] = condition;
-	} else {
-		delete conditions[key];
-	}
-
-	localStorage.setItem('conditions', JSON.stringify(conditions));
-}
-
-function set_conditions(obj, conditions) {
-	obj.find('span.conditions').remove();
-
-	if (conditions != '') {
-		obj.append('<span class="conditions">' + conditions + '</span>');
-	}
-}
-
-function set_condition(obj, condition, only_set = false) {
-	var key = obj.prop('id');
-
-	if (condition != null) {
-		var conditions = $('div#' + key).find('span.conditions').text();
-		if (conditions == '') {
-			conditions = [];
-		} else {
-			conditions = conditions.replace('<br />', '');
-			conditions = conditions.split(',');
-		}
-
-		if (conditions.includes(condition)) {
-			if (only_set) {
-				return;
-			}
-			conditions = conditions.remove(condition);
-		} else {
-			conditions.push(condition);
-			conditions.sort();
-		}
-	} else {
-		var conditions = [];
-	}
-
-	conditions = conditions.join(',<br />');
-	set_conditions(obj, conditions);
-	save_conditions(obj, conditions);
-
-	var data = {
-		action: 'condition',
-		object_id: key,
-		condition: conditions
-	};
-	websocket_send(data);
-}
-
 /* Input functions
  */
 function handle_input(input) {
@@ -2626,19 +2495,6 @@ function handle_input(input) {
 	var param = (parts.length > 1) ? parts[1].trim() : '';
 
 	switch (command) {
-		case 'add':
-			if (dungeon_master == false) {
-				return;
-			}
-
-			if (param.trim() == '') {
-				write_sidebar('Specify a name.');
-				$('div.input input').val(input);
-				return;
-			} else {
-				combat_add(param);
-			}
-			break;
 		case 'audio':
 			wf_audio_player.open();
 			break;
@@ -2647,13 +2503,6 @@ function handle_input(input) {
 			break;
 		case 'clear':
 			$('div.sidebar').empty();
-			break;
-		case 'combat':
-			if (dungeon_master == false) {
-				return;
-			}
-
-			combat_start();
 			break;
 		case 'd20':
 			if (roll_d20(param) == false) {
@@ -2672,20 +2521,6 @@ function handle_input(input) {
 				$('div.input input').val(input);
 				return;
 			}
-			break;
-		case 'damage':
-			if (my_character == null) {
-				return;
-			}
-
-			points = parseInt(param);
-			if (isNaN(points)) {
-				write_sidebar('Invalid damage points.');
-				$('div.input input').val(input);
-				return;
-			}
-
-			object_damage_command(my_character, points);
 			break;
 		case 'dicecolor':
 			if ((param.length != 7) || (param.substr(0, 1) != '#')) {
@@ -2707,13 +2542,6 @@ function handle_input(input) {
 				$('div.input input').val(input);
 				return;
 			}
-			break;
-		case 'done':
-			if (dungeon_master == false) {
-				return;
-			}
-
-			combat_stop();
 			break;
 		case 'expand':
 			expand_sidebar();
@@ -2746,19 +2574,6 @@ function handle_input(input) {
 					fog_of_war_pattern(param, fow_obj);
 				}
 			}
-			break;
-		case 'heal':
-			if (my_character == null) {
-				return;
-			}
-
-			points = parseInt(param);
-			if (isNaN(points)) {
-				write_sidebar('Invalid healing points');
-				return;
-			}
-
-			object_damage_command(my_character, -points);
 			break;
 		case 'help':
 			show_help();
@@ -2814,13 +2629,6 @@ function handle_input(input) {
 				write_sidebar('Journal entry added.');
 			}
 			return;
-		case 'next':
-			if (dungeon_master == false) {
-				return;
-			}
-
-			combat_next(param);
-			break;
 		case 'night':
 			if (dungeon_master == false) {
 				return;
@@ -2901,30 +2709,14 @@ function handle_input(input) {
 
 			location.reload();
 			break;
-		case 'remove':
-			if (dungeon_master == false) {
-				return;
-			}
-
-			if (param == '') {
-				write_sidebar('Specify a name.');
-				$('div.input input').val(input);
-				return;
-			}
-
-			combat_remove(param);
-			break;
 		case 'roll':
 			if (param == '') {
-				wf_dice_roll.open();
+				dice_roll_window_open();
 			} else if (roll_dice(param) == false) {
 				write_sidebar('Invalid dice roll.');
 				$('div.input input').val(input);
 				return;
 			}
-			break;
-		case 'spells':
-			show_spells();
 			break;
 		case 'version':
 			var version = $('div.playarea').attr('version');
@@ -2995,9 +2787,11 @@ function handle_input(input) {
 			write_sidebar('Message sent to ' + receiver + '.');
 			break;
 		default:
-			write_sidebar('Unknown command.');
-			$('div.input input').val(input);
-			return;
+			if (rule_system_handle_input(command, param) == false) {
+				write_sidebar('Unknown command.');
+				$('div.input input').val(input);
+				return;
+			}
 	}
 
 	input_history_add(input);
@@ -3014,9 +2808,6 @@ function context_menu_handler(key) {
 	if (parts[0] == 'alternate') {
 		key = parts[0];
 		var alternate_id = parts[1];
-	} else if (parts[0] == 'condition') {
-		key = parts[0];
-		var condition_id = parts[1];
 	} else if (parts[0] == 'rotate') {
 		key = parts[0];
 		var direction = parts[1];
@@ -3026,6 +2817,10 @@ function context_menu_handler(key) {
 	} else if (parts[0] == 'travel') {
 		key = parts[0];
 		var travel_map_id = parts[1];
+	}
+
+	if (rule_system_context_menu_handler(key, obj)) {
+		return;
 	}
 
 	switch (key) {
@@ -3063,66 +2858,10 @@ function context_menu_handler(key) {
 				fog_of_war_update(my_character);
 			}
 			break;
-		case 'armor':
-			var armor_class = obj.attr('armor_class');
-			cauldron_prompt('Armor class:', armor_class, function(points) {
-				points = parseInt(points);
-				if (isNaN(points)) {
-					write_sidebar('Invalid armor class.');
-					return;
-				}
-
-				var data = {
-					action: 'armor',
-					instance_id: obj.prop('id'),
-					points: points
-				};
-				websocket_send(data);
-
-				$.post('/object/armor_class', {
-					instance_id: obj.prop('id'),
-					armor_class: points
-				});
-
-				obj.attr('armor_class', points);
-			});
-			break;
-		case 'attack':
-			wf_attack.find('select').val('Normal');
-			wf_attack.open(obj);
-			break;
-		case 'condition':
-			if (condition_id > 0) {
-				var condition = $('div.conditions div[con_id=' + condition_id + ']').text();
-				set_condition(obj, condition);
-			} else {
-				set_condition(obj, null);
-			}
-			break;
 		case 'coordinates':
 			var pos_x = Math.round(coord_to_grid(mouse_x, false) / grid_cell_size);
 			var pos_y = Math.round(coord_to_grid(mouse_y, false) / grid_cell_size);
 			write_sidebar('Coordinates: ' + pos_x + ',' + pos_y);
-			break;
-		case 'damage':
-			var max_hp = obj.attr('hitpoints');
-			var hp_left = (parseInt(max_hp) - parseInt(obj.attr('damage'))).toString();
-
-			cauldron_prompt('Points (max HP=' + max_hp + ', HP left=' + hp_left + '):', '', function(points) {
-				points = parseInt(points);
-				if (isNaN(points)) {
-					write_sidebar('Invalid damage points.');
-					return;
-				}
-
-				if (obj.hasClass('selected')) {
-					$('div.selected').each(function() {
-						object_damage_command($(this), points);
-					});
-				} else {
-					object_damage_command(obj, points);
-				}
-			});
 			break;
 		case 'delete':
 			cauldron_confirm('Delete object(s)?', function() {
@@ -3363,26 +3102,6 @@ function context_menu_handler(key) {
 				hand_over(focus_obj);
 			}
 			break;
-		case 'heal':
-			var max_hp = obj.attr('hitpoints');
-			var damage = obj.attr('damage');
-
-			cauldron_prompt('Points (max HP=' + max_hp + ', damage=' + damage + '):', '', function(points) {
-				points = parseInt(points);
-				if (isNaN(points)) {
-					write_sidebar('Invalid healing points.');
-					return;
-				}
-
-				if (obj.hasClass('selected')) {
-					$('div.selected').each(function() {
-						object_damage_command($(this), -points);
-					});
-				} else {
-					object_damage_command(obj, -points);
-				}
-			});
-			break;
 		case 'info':
 			object_info(obj);
 			break;
@@ -3514,35 +3233,6 @@ function context_menu_handler(key) {
 			};
 			websocket_send(data);
 			break;
-		case 'maxhp':
-			if (my_character == null) {
-				return;
-			}
-
-			var max_hp = my_character.attr('hitpoints');
-			cauldron_prompt('Maximum hit points:', max_hp, function(points) {
-				points = parseInt(points);
-				if (isNaN(points)) {
-					write_sidebar('Invalid hit points.');
-					return;
-				}
-
-				var data = {
-					action: 'maxhp',
-					instance_id: my_character.prop('id'),
-					points: points
-				};
-				websocket_send(data);
-
-				$.post('/object/hitpoints', {
-					instance_id: my_character.prop('id'),
-					hitpoints: points
-				});
-
-				my_character.attr('hitpoints', points);
-				object_damage_command(my_character, points - max_hp);
-			});
-			break;
 		case 'presence':
 			object_toggle_presence(obj);
 			break;
@@ -3552,18 +3242,6 @@ function context_menu_handler(key) {
 			if ((direction = compass[direction]) != undefined) {
 				object_rotate_command(obj, direction);
 			}
-			break;
-		case 'sea_cone':
-			spell_effect_area_cone(mouse_x, mouse_y);
-			break;
-		case 'sea_cone_angle':
-			spell_effect_area_change_cone_angle();
-			break;
-		case 'sea_circle':
-			spell_effect_area_circle(mouse_x, mouse_y);
-			break;
-		case 'sea_square':
-			spell_effect_area_square(mouse_x, mouse_y);
 			break;
 		case 'shape':
 			if (shape_change_id == 0) {
@@ -3624,17 +3302,6 @@ function context_menu_handler(key) {
 					instance_id: object.prop('id')
 				};
 				websocket_send(data);
-			});
-			break;
-		case 'temphp':
-			cauldron_prompt('Temporary hit points:', temporary_hitpoints().toString(), function(points) {
-				points = parseInt(points);
-				if (isNaN(points)) {
-					write_sidebar('Invalid hit points.');
-					return;
-				}
-
-				temporary_hitpoints(points);
 			});
 			break;
 		case 'travel':
@@ -3721,39 +3388,32 @@ function key_down(event) {
 	var open_windows = $('div.windowframe_overlay > div:visible');
 
 	switch (event.which) {
-		case 16:
-			// Shift
+		case KEY_SHIFT:
 			shift_down = true;
 			break;
-		case 17:
-			// CTRL
+		case KEY_CTRL:
 			ctrl_down = true;
 			break;
-		case 18:
-			// ALT
+		case KEY_ALT:
 			alt_down = true;
 			break;
-		case 19:
-			// Pauze / break
+		case KEY_PAUSE_BREAK:
 			if (dungeon_master) {
 				$('div.menu button.pause').trigger('click');
 			}
 			break;
-		case 27:
-			// Escape
+		case KEY_ESC:
 			$('p.measure').remove();
 			measuring_stop();
 			open_windows.close();
 			context_menu_remove();
 			$('div.menu').hide();
-			spell_effect_area_stop();
 			break;
-		case 192:
-			// ~
+		case KEY_TILDE:
 			if ($('div.diceroll:visible').length > 0) {
-				wf_dice_roll.close();
+				dice_roll_window_close();
 			} else if (open_windows.length == 0) {
-				wf_dice_roll.open();
+				dice_roll_window_open();
 			}
 			break;
 	}
@@ -3763,18 +3423,15 @@ function key_down(event) {
 	}
 
 	switch (event.which) {
-		case 9:
-			// TAB
+		case KEY_TAB:
 			toggle_fullscreen();
 			break;
-		case 70:
-			// f
+		case KEY_F:
 			if (dungeon_master && (focus_obj != null) && focus_obj.hasClass('character')) {
 				object_show_fow(focus_obj);
 			}
 			break;
-		case 80:
-			// p
+		case KEY_P:
 			if (dungeon_master && focus_obj != null) {
 				object_toggle_presence(focus_obj);
 			}
@@ -3784,20 +3441,17 @@ function key_down(event) {
 
 function key_up(event) {
 	switch (event.which) {
-		case 16:
-			// Shift
+		case KEY_SHIFT:
 			shift_down = false;
 			$('canvas#drawing').off('mousemove');
 			break;
-		case 17:
-			// CTRL
+		case KEY_CTRL:
 			ctrl_down = false;
 			if (shift_down == false) {
 				$('canvas#drawing').off('mousemove');
 			}
 			break;
-		case 18:
-			// ALT
+		case KEY_ALT:
 			alt_down = false;
 			break;
 	}
@@ -3823,7 +3477,12 @@ $(document).ready(function() {
 	var version = $('div.playarea').attr('version');
 	var ws_host = $('div.playarea').attr('ws_host');
 	var ws_port = $('div.playarea').attr('ws_port');
-	
+
+	var my_char = $('div.playarea').attr('my_char');
+	if (my_char != undefined) {
+		my_character = $('div#' + my_char);
+	}
+
 	if (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)) {
 		mobile_device = true;
 	}
@@ -3832,6 +3491,10 @@ $(document).ready(function() {
 	write_sidebar('<b>Welcome to Cauldron v' + version + '</b>');
 	write_sidebar('Type /help for command information.');
 	write_sidebar('You are ' + character_name + '.');
+
+	/* Rule system initialize
+	 */
+	rule_system_initialize();
 
 	if (dungeon_master) {
 		/* Pauze button
@@ -3899,13 +3562,7 @@ $(document).ready(function() {
 		var role = (dungeon_master) ? 'being the' : 'playing';
 		send_message(my_name + ' entered the session, ' + role + ' ' + character_name + '.', null, false);
 
-		var parts = window.location.pathname.split('/');
-		if (parts.length == 4) {
-			var my_char_id = $('div.playarea').attr('my_char');
-			if (my_char_id != undefined) {
-				object_damage_command($('div#' + my_char_id), 0);
-			}
-		}
+		rule_system_websocket_open();
 
 		if (my_character != null) {
 			/* Unhide character
@@ -3966,28 +3623,23 @@ $(document).ready(function() {
 		delete data.adventure_id;
 		delete data.from_user_id;
 
+		if (rule_system_websocket_message(data)) {
+			return;
+		}
+
 		switch (data.action) {
+			case 'adventure_custom_value':
+				adventure_custom_value_action(data.key, data.value);
+				break;
 			case 'alternate':
 				var img_size = data.size * grid_cell_size;
 				$('div#' + data.char_id).find('img').attr('src', '/resources/' + resources_key + '/' + data.src);
 				$('div#' + data.char_id).css('width', img_size + 'px');
 				$('div#' + data.char_id).find('img').css('height', img_size + 'px');
 				break;
-			case 'armor':
-				var obj = $('div#' + data.instance_id);
-				obj.attr('armor_class', data.points);
-				if (dungeon_master) {
-					write_sidebar(obj.find('span.name').text() + '\'s armor class set to ' + data.points + '.');
-				}
-				break;
 			case 'audio':
 				var audio = new Audio(data.filename);
 				audio.play();
-				break;
-			case 'condition':
-				var obj = $('div#' + data.object_id);
-				set_conditions(obj, data.condition);
-				save_conditions(obj, data.condition);
 				break;
 			case 'create':
 				var obj = '<div id="token' + data.instance_id + '" token_id="' + data.token_id +'" class="token" style="left:' + data.pos_x + 'px; top:' + data.pos_y + 'px; z-index:' + LAYER_TOKEN + '" type="' + data.type + '" is_hidden="no" rotation="0" armor_class="' + data.armor_class + '" hitpoints="' + data.hitpoints + '" damage="0" name="">' +
@@ -3996,16 +3648,13 @@ $(document).ready(function() {
 				$('div.playarea div.tokens').append(obj);
 				$('div#token' + data.instance_id).on('contextmenu', object_contextmenu_player);
 				break;
-			case 'damage':
+			case 'character_custom_value':
 				var obj = $('div#' + data.instance_id);
-				object_damage_action(obj, data.damage, data.perc);
+				character_custom_value_action(obj, data.key, data.value);
 				break;
 			case 'delete':
 				var obj = $('div#' + data.instance_id);
 				obj.remove();
-				break;
-			case 'done':
-				combat_stop();
 				break;
 			case 'door_state':
 				var obj = $('div#' + data.door_id);
@@ -4132,11 +3781,14 @@ $(document).ready(function() {
 				obj.find('img').on('contextmenu', function(event) {
 					$('div.selected').removeClass('selected');
 
-					var menu_entries = {
-						'info': { name:'Get infomation', icon:'fa-info-circle' },
-						'view': { name:'View', icon:'fa-search' },
-						'sep1': '-',
-						'rotate': { name:'Rotate', icon:'fa-compass', items:{
+					var menu_entries = {};
+
+					menu_entries['info'] = { name:'Get infomation', icon:'fa-info-circle' };
+					menu_entries['view'] = { name:'View', icon:'fa-search' };
+					menu_entries['sep1'] = '-';
+
+					if (obj.attr('token_type') == 'topdown') {
+						menu_entries['rotate'] = { name:'Rotate', icon:'fa-compass', items:{
 							'rotate_n':  { name:'North', icon:'fa-arrow-circle-up' },
 							'rotate_ne': { name:'North East' },
 							'rotate_e':  { name:'East', icon:'fa-arrow-circle-right' },
@@ -4145,19 +3797,19 @@ $(document).ready(function() {
 							'rotate_sw': { name:'South West' },
 							'rotate_w':  { name:'West', icon:'fa-arrow-circle-left' },
 							'rotate_nw': { name:'North West' }
-						}},
-						'lower': { name:'Lower', icon:'fa-arrow-down' },
-						'sep2': '-',
-						'sea': sea_submenu,
-						'attack': { name:'Attack', icon:'fa-legal' },
-						'sep3': '-',
-						'marker': { name:'Set marker', icon:'fa-map-marker' },
-						'distance': { name:'Measure distance', icon:'fa-map-signs' }
-					};
-
-					if (obj.attr('token_type') == 'portrait') {
-						delete menu_entries['rotate'];
+						}};
 					}
+
+					menu_entries['lower'] = { name:'Lower', icon:'fa-arrow-down' };
+					menu_entries['sep2'] = '-';
+
+					rule_system_menu_token_handover(menu_entries, obj);
+					if (object_last_item(menu_entries) != '-') {
+						menu_entries['sep3'] = '-';
+					}
+
+					menu_entries['marker'] = { name:'Set marker', icon:'fa-map-marker' };
+					menu_entries['distance'] = { name:'Measure distance', icon:'fa-map-signs' };
 
 					context_menu_show($(this), event, menu_entries, context_menu_handler, menu_defaults);
 
@@ -4214,13 +3866,6 @@ $(document).ready(function() {
 				break;
 			case 'marker':
 				marker_create(data.pos_x, data.pos_y, data.name);
-				break;
-			case 'maxhp':
-				var obj = $('div#' + data.instance_id);
-				obj.attr('hitpoints', data.points);
-				if (dungeon_master) {
-					write_sidebar(obj.find('span.name').text() + '\'s maximum hit points set to ' + data.points + '.');
-				}
 				break;
 			case 'move':
 				var obj = $('div#' + data.instance_id);
@@ -4360,18 +4005,6 @@ $(document).ready(function() {
 				break;
 			case 'say':
 				message_to_sidebar(data.mesg, data.name);
-				break;
-			case 'sea_circle':
-				spell_effect_area_draw_circle(data.center_x, data.center_y, data.radius);
-				break;
-			case 'sea_cone':
-				spell_effect_area_draw_cone(data.origin_x, data.origin_y, data.radius, data.angle, data.cone_angle);
-				break;
-			case 'sea_square':
-				spell_effect_area_draw_square(data.pos_x, data.pos_y, data.range);
-				break;
-			case 'sea_clear':
-				spell_effect_area_clear();
 				break;
 			case 'scan':
 				var data = {
@@ -4528,18 +4161,6 @@ $(document).ready(function() {
 		grid_init(grid_cell_size);
 		$('div.grid canvas').css('z-index', LAYER_GRID);
 	}
-
-	/* Spell effect area
-	 */
-	spell_effect_area_init(grid_cell_size);
-
-	sea_submenu = { name:'Spell effect area', icon:'fa-magic', items:{
-		'sea_circle': { name:'Circle', icon:'fa-circle' },
-		'sea_cone': { name:'Cone', icon:'fa-play' },
-		'sea_square': { name:'Square', icon:'fa-stop' },
-		'sep': '-',
-		'sea_cone_angle': { name:'Change cone angle', icon:'fa-edit' }
-	}};
 
 	/* Map offset
 	 */
@@ -5029,12 +4650,7 @@ $(document).ready(function() {
 			$('div.tokens div.token img').on('dblclick', object_dblclick);
 		}
 
-		$('div.playarea').on('click', function() {
-			if (focus_obj != null) {
-				focus_obj.find('img').css('border', '');
-				focus_obj = null;
-			}
-		});
+		$('div.playarea').on('click', playarea_click);
 
 		$('div.token[is_hidden=yes]').each(function() {
 			$(this).fadeTo(0, OBJECT_HIDDEN_FADE);
@@ -5076,26 +4692,28 @@ $(document).ready(function() {
 
 		/* Menu zones
 		 */
-		zone_menu = {
-			'info': { name:'Get information', icon:'fa-info-circle' },
-			'sep1': '-',
-			'marker': { name:'Set marker', icon:'fa-map-marker' },
-			'distance': { name:'Measure distance', icon:'fa-map-signs' },
-			'coordinates': { name:'Show coordinates', icon:'fa-flag' },
-			'effect_create': { name:'Create effect', icon:'fa-fire' },
-			'light_create': { name:'Create light', icon:'fa-lightbulb-o' },
-			'sep2': '-',
-			'sea': sea_submenu,
-			'sep3': '-',
-			'handover': { name:'Hand over', icon:'fa-hand-stop-o' },
-			'takeback': { name:'Take back', icon:'fa-hand-grab-o' },
-			'sep4': '-',
-			'zone_delete': { name:'Delete', icon:'fa-trash' },
-		};
+		zone_menu = {};
+		zone_menu['info'] = { name:'Get information', icon:'fa-info-circle' };
+		zone_menu['sep1'] = '-';
+		zone_menu['marker'] = { name:'Set marker', icon:'fa-map-marker' };
+		zone_menu['distance'] = { name:'Measure distance', icon:'fa-map-signs' };
+		zone_menu['coordinates'] = { name:'Show coordinates', icon:'fa-flag' };
+		zone_menu['effect_create'] = { name:'Create effect', icon:'fa-fire' };
 
-		if ((fow_type != FOW_NIGHT_CELL) && (fow_type != FOW_NIGHT_REAL)) {
-			delete zone_menu['light_create'];
+		if ((fow_type == FOW_NIGHT_CELL) || (fow_type == FOW_NIGHT_REAL)) {
+			zone_menu['light_create'] = { name:'Create light', icon:'fa-lightbulb-o' };
 		}
+
+		zone_menu['sep2'] = '-';
+		rule_system_menu_zone(zone_menu);
+		if (object_last_item(zone_menu) != '-') {
+			zone_menu['sep3'] = '-';
+		}
+
+		zone_menu['handover'] = { name:'Hand over', icon:'fa-hand-stop-o' };
+		zone_menu['takeback'] = { name:'Take back', icon:'fa-hand-grab-o' };
+		zone_menu['sep4'] = '-';
+		zone_menu['zone_delete'] = { name:'Delete', icon:'fa-trash' };
 
 		$('div.zone').on('contextmenu', function(event) {
 			var menu_entries = zone_menu;
@@ -5111,6 +4729,8 @@ $(document).ready(function() {
 		/* Menu characters
 		 */
 		$('div.character img').on('contextmenu', function(event) {
+			var obj = $(this).parent();
+
 			$('div.selected').removeClass('selected');
 
 			var menu_entries = {
@@ -5118,7 +4738,7 @@ $(document).ready(function() {
 				'view': { name:'View', icon:'fa-search' }
 			};
 
-			var char_id = $(this).parent().attr('char_id');
+			var char_id = obj.attr('char_id');
 			var sheet = $('div.characters div.character[char_id="' + char_id + '"]').attr('sheet');
 			if (sheet != '') {
 				menu_entries['sheet'] = { name:'View character sheet', icon:'fa-file-text-o' };
@@ -5130,36 +4750,20 @@ $(document).ready(function() {
 			menu_entries['distance'] = { name:'Measure distance', icon:'fa-map-signs' };
 			menu_entries['coordinates'] = { name:'Get coordinates', icon:'fa-flag' };
 			menu_entries['focus'] = { name:'Focus', icon:'fa-binoculars' };
-			menu_entries['sep2'] = '-';
 
 			if ((fow_type != FOW_NONE) && (fow_type != FOW_REVEAL)) {
-				if ($(this).parent().is(fow_obj)) {
+				menu_entries['sep2'] = '-';
+				if (obj.is(fow_obj)) {
 					menu_entries['fow_show'] = { name:'Remove Fog of War', icon:'fa-mixcloud' };
 				} else {
 					menu_entries['fow_show'] = { name:'Show its Fog of War', icon:'fa-cloud' };
 				}
 				menu_entries['fow_distance'] = { name:'Set vision distance', icon:'fa-cloud-upload' };
 				menu_entries['light_radius'] = { name:'Set light radius', icon:'fa-lightbulb-o' };
-				menu_entries['sep3'] = '-';
 			}
 
-			menu_entries['sea'] = sea_submenu;
-			menu_entries['attack'] = { name:'Attack', icon:'fa-legal' };
-			menu_entries['damage'] = { name:'Damage', icon:'fa-warning' };
-			menu_entries['heal'] = { name:'Heal', icon:'fa-medkit' };
-
-			var has = $(this).parent().find('span.conditions').text().split(',');
-			var conditions = {};
-			conditions['condition_0'] = { name: 'None' };
-			conditions['sep0'] = '-';
-			$('div.conditions div').each(function() {
-				var con_id = $(this).attr('con_id');
-				var name = $(this).text();
-				var icon = has.includes(name) ? 'fa-check-square-o' : 'fa-square-o';
-				conditions['condition_' + con_id] = { name: name, icon: icon};
-			});
-
-			menu_entries['conditions'] = { name:'Set condition', icon:'fa-heartbeat', items:conditions};
+			menu_entries['sep3'] = '-';
+			rule_system_menu_character_dm(menu_entries, obj);
 
 			var shapes = {};
 			shapes['shape_0'] = { name: 'Default' };
@@ -5173,7 +4777,10 @@ $(document).ready(function() {
 				menu_entries['shapes'] = { name:'Change shape', icon:'fa-user-circle', items:shapes};
 			}
 
-			menu_entries['sep4'] = '-';
+			if (object_last_item(menu_entries) != '-') {
+				menu_entries['sep4'] = '-';
+			}
+
 			menu_entries['zone_create'] = { name:'Create zone', icon:'fa-square-o' };
 
 			var maps = {};
@@ -5197,21 +4804,24 @@ $(document).ready(function() {
 		/* Menu map
 		 */
 		$('div.playarea > div').on('contextmenu', function(event) {
-			var menu_entries = {
-				'marker': { name:'Set marker', icon:'fa-map-marker' },
-				'distance': { name:'Measure distance', icon:'fa-map-signs' },
-				'coordinates': { name:'Get coordinates', icon:'fa-flag' },
-				'sep1': '-',
-				'sea': sea_submenu,
-				'sep2': '-',
-				'effect_create': { name:'Create effect', icon:'fa-fire' },
-				'light_create': { name:'Create light', icon:'fa-lightbulb-o' },
-				'zone_create': { name:'Create zone', icon:'fa-square-o' }
-			};
+			var menu_entries = {};
+			menu_entries['marker'] = { name:'Set marker', icon:'fa-map-marker' };
+			menu_entries['distance'] = { name:'Measure distance', icon:'fa-map-signs' };
+			menu_entries['coordinates'] = { name:'Get coordinates', icon:'fa-flag' };
+			menu_entries['sep1'] = '-';
 
-			if ((fow_type != FOW_NIGHT_CELL) && (fow_type != FOW_NIGHT_REAL)) {
-				delete menu_entries['light_create'];
+			rule_system_menu_map(menu_entries);
+			if (object_last_item(menu_entries) != '-') {
+				menu_entries['sep2'] = '-';
 			}
+
+			menu_entries['effect_create'] = { name:'Ceate effect', icon:'fa-fire' };
+
+			if ((fow_type == FOW_NIGHT_CELL) || (fow_type == FOW_NIGHT_REAL)) {
+				menu_entries['light_create'] = { name:'Create light', icon:'fa-lightbulb-o' };
+			}
+
+			menu_entries['zone_create'] = { name:'Create zone', icon:'fa-square-o' };
 
 			context_menu_show($(this), event, menu_entries, context_menu_handler, menu_defaults);
 			return false;
@@ -5245,12 +4855,6 @@ $(document).ready(function() {
 			}
 		});
 
-		/* Start combat button
-		 */
-		$('button.start_combat').on('click', function() {
-			combat_start();
-		});
-
 		if (fow_type == FOW_REVEAL) {
 			fog_of_war_init(LAYER_FOG_OF_WAR, true);
 		}
@@ -5275,151 +4879,123 @@ $(document).ready(function() {
 		};
 		$('div.filter input').on('keyup', library_filter);
 		library_filter();
-
-		/* Combat active?
-		 */
-		combat_check_running();
 	} else {
 		/* Player settings
 		 */
-		var my_char = $('div.playarea').attr('my_char');
-		if (my_char != undefined) {
-			my_character = $('div#' + my_char);
+		character_id = my_character.attr('char_id');
 
-			character_id = my_character.attr('char_id');
+		my_character.addClass('mine');
 
-			my_character.addClass('mine');
-
-			if ($('div.playarea').attr('drag_character') == 'yes') {
-				my_character.draggable({
-					containment: 'div.playarea > div',
-					handle: 'img',
-					stop: function(event, ui) {
-						object_move($(this));
-					}
-				});
-				my_character.css('cursor', 'grab');
-			}
-
-			my_character.css('z-index', LAYER_CHARACTER_OWN);
-
-			/* Menu my character
-			 */
-			$('div#' + my_char + ' img').on('contextmenu', function(event) {
-				var menu_entries = {
-					'info': { name:'Get information', icon:'fa-info-circle' },
-					'view': { name:'View', icon:'fa-search' },
-					'distance': { name:'Measure distance', icon:'fa-map-signs' },
-					'sep1': '-',
-					'sea': sea_submenu,
-					'damage': { name:'Damage', icon:'fa-warning' },
-					'heal': { name:'Heal', icon:'fa-medkit' },
-					'temphp': { name:'Set temporary hit points', icon:'fa-heart-o' },
-					'sep2': '-',
-					'maxhp': { name:'Set maximum hit points', icon:'fa-heart' },
-					'armor': { name:'Set armor class', icon:'fa-shield' },
-					'sep3': '-'
-				};
-
-				var has = $(this).parent().find('span.conditions').text().split(',');
-				var conditions = {};
-				conditions['condition_0'] = { name: 'None' };
-				conditions['sep0'] = '-';
-				$('div.conditions div').each(function() {
-					var con_id = $(this).attr('con_id');
-					var name = $(this).text();
-					var icon = has.includes(name) ? 'fa-check-square-o' : 'fa-square-o';
-					conditions['condition_' + con_id] = { name: name, icon: icon};
-				});
-
-				menu_entries['conditions'] = { name:'Set condition', icon:'fa-heartbeat', items:conditions };
-
-				var alternates = $('div.alternates div');
-				if (alternates.length > 0) {
-					var icons = {};
-					icons['alternate_0'] = { name: 'Default' };
-					icons['sep1'] = '-';
-
-					alternates.each(function() {
-						var icon_id = $(this).attr('icon_id');
-						icons['alternate_' + icon_id] = { name: $(this).text()};
-					});
-
-					menu_entries['alternates'] = { name:'Change icon', icon:'fa-user-circle', items:icons };
+		if ($('div.playarea').attr('drag_character') == 'yes') {
+			my_character.draggable({
+				containment: 'div.playarea > div',
+				handle: 'img',
+				stop: function(event, ui) {
+					object_move($(this));
 				}
-
-				context_menu_show($(this), event, menu_entries, context_menu_handler, menu_defaults);
-				return false;
 			});
-
-			/* Unknown tokens
-			 */
-			$('div.token span.name[known="no"]').css('display', 'none');
-
-			/* Zone presence
-			 */
-			zone_init_presence();
-
-			/* Fog of war
-			 */
-			if (fow_type == FOW_REVEAL) {
-				fog_of_war_init(LAYER_FOG_OF_WAR, false);
-			} else {
-				fog_of_war_init(LAYER_FOG_OF_WAR);
-				if ((fow_type == FOW_NIGHT_CELL) || (fow_type == FOW_NIGHT_REAL)) {
-					var distance = character_vision(my_character);
-					fog_of_war_set_distance(distance);
-				}
-				fog_of_war_update(my_character);
-			}
-
-			/* Anti-cheat
-			 */
-			var layer_removed_triggered = false;
-
-			var layer_removed = function(layer) {
-				if (layer_removed_triggered) {
-					return;
-				}
-				layer_removed_triggered = true;
-
-				$('div#map_background').remove();
-				send_message('Player ' + character_name + ' removed the ' + layer + ' layer.', 'Anti-Cheat');
-
-			};
-
-			$('div.walls').on('DOMNodeRemoved', function() {
-				layer_removed('walls');
-			});
-			$('div.wall').on('DOMNodeRemoved', function() {
-				layer_removed('walls');
-			});
-
-			$('div.doors').on('DOMNodeRemoved', function() {
-				layer_removed('doors');
-			});
-			$('div.door').on('DOMNodeRemoved', function() {
-				layer_removed('doors');
-			});
-
-			$('div.blinders').on('DOMNodeRemoved', function() {
-				layer_removed('blinders');
-			});
-			$('div.blinder').on('DOMNodeRemoved', function() {
-				layer_removed('blinders');
-			});
-
-			$('div.fog_of_war').on('DOMNodeRemoved', function() {
-				layer_removed('fog of war');
-			});
-			$('div.fog_of_war canvas').on('DOMNodeRemoved', function() {
-				layer_removed('fog of war');
-			});
-
-			$('div.pause').on('DOMNodeRemoved', function() {
-				layer_removed('pause');
-			});
+			my_character.css('cursor', 'grab');
 		}
+
+		my_character.css('z-index', LAYER_CHARACTER_OWN);
+
+		/* Menu my character
+		 */
+		$('div#' + my_char + ' img').on('contextmenu', function(event) {
+			var menu_entries = {};
+			menu_entries['info'] = { name:'Get information', icon:'fa-info-circle' };
+			menu_entries['view'] = { name:'View', icon:'fa-search' };
+			menu_entries['distance'] = { name:'Measure distance', icon:'fa-map-signs' };
+			menu_entries['sep1'] = '-';
+			rule_system_menu_character_mine(menu_entries, $(this).parent());
+
+			var alternates = $('div.alternates div');
+			if (alternates.length > 0) {
+				menu_entries['sep2'] = '-';
+
+				var icons = {};
+				icons['alternate_0'] = { name: 'Default' };
+				icons['sep1'] = '-';
+
+				alternates.each(function() {
+					var icon_id = $(this).attr('icon_id');
+					icons['alternate_' + icon_id] = { name: $(this).text()};
+				});
+
+				menu_entries['alternates'] = { name:'Change icon', icon:'fa-user-circle', items:icons };
+			}
+
+			context_menu_show($(this), event, menu_entries, context_menu_handler, menu_defaults);
+			return false;
+		});
+
+		/* Unknown tokens
+		 */
+		$('div.token span.name[known="no"]').css('display', 'none');
+
+		/* Zone presence
+		 */
+		zone_init_presence();
+
+		/* Fog of war
+		 */
+		if (fow_type == FOW_REVEAL) {
+			fog_of_war_init(LAYER_FOG_OF_WAR, false);
+		} else {
+			fog_of_war_init(LAYER_FOG_OF_WAR);
+			if ((fow_type == FOW_NIGHT_CELL) || (fow_type == FOW_NIGHT_REAL)) {
+				var distance = character_vision(my_character);
+				fog_of_war_set_distance(distance);
+			}
+			fog_of_war_update(my_character);
+		}
+
+		/* Anti-cheat
+		 */
+		var layer_removed_triggered = false;
+
+		var layer_removed = function(layer) {
+			if (layer_removed_triggered) {
+				return;
+			}
+			layer_removed_triggered = true;
+
+			$('div#map_background').remove();
+			send_message('Player ' + character_name + ' removed the ' + layer + ' layer.', 'Anti-Cheat');
+
+		};
+
+		$('div.walls').on('DOMNodeRemoved', function() {
+			layer_removed('walls');
+		});
+		$('div.wall').on('DOMNodeRemoved', function() {
+			layer_removed('walls');
+		});
+
+		$('div.doors').on('DOMNodeRemoved', function() {
+			layer_removed('doors');
+		});
+		$('div.door').on('DOMNodeRemoved', function() {
+			layer_removed('doors');
+		});
+
+		$('div.blinders').on('DOMNodeRemoved', function() {
+			layer_removed('blinders');
+		});
+		$('div.blinder').on('DOMNodeRemoved', function() {
+			layer_removed('blinders');
+		});
+
+		$('div.fog_of_war').on('DOMNodeRemoved', function() {
+			layer_removed('fog of war');
+		});
+		$('div.fog_of_war canvas').on('DOMNodeRemoved', function() {
+			layer_removed('fog of war');
+		});
+
+		$('div.pause').on('DOMNodeRemoved', function() {
+			layer_removed('pause');
+		});
 
 		/* Menu tokens
 		 */
@@ -5428,16 +5004,18 @@ $(document).ready(function() {
 		/* Menu (other) characters
 		 */
 		$('div.character:not(.mine) img').on('contextmenu', function(event) {
-			var menu_entries = {
-				'info': { name:'Get information', icon:'fa-info-circle' },
-				'view': { name:'View', icon:'fa-search' },
-				'sep1': '-',
-				'sea': sea_submenu,
-				'attack': { name:'Attack', icon:'fa-legal' },
-				'sep2': '-',
-				'marker': { name:'Set marker', icon:'fa-map-marker' },
-				'distance': { name:'Measure distance', icon:'fa-map-signs' },
-			};
+			var menu_entries = {};
+			menu_entries['info'] = { name:'Get information', icon:'fa-info-circle' };
+			menu_entries['view'] = { name:'View', icon:'fa-search' };
+			menu_entries['sep1'] = '-';
+
+			rule_system_menu_character_other(menu_entries, $(this).parent());
+			if (object_last_item(menu_entries) != '-') {
+				menu_entries['sep2'] = '-';
+			}
+
+			menu_entries['marker'] = { name:'Set marker', icon:'fa-map-marker' };
+			menu_entries['distance'] = { name:'Measure distance', icon:'fa-map-signs' };
 
 			context_menu_show($(this), event, menu_entries, context_menu_handler, menu_defaults);
 			return false;
@@ -5449,8 +5027,9 @@ $(document).ready(function() {
 			var menu_entries = {
 				'marker': { name:'Set marker', icon:'fa-map-marker' },
 				'distance': { name:'Measure distance', icon:'fa-map-signs' },
-				'sea': sea_submenu
 			};
+
+			rule_system_menu_map(menu_entries);
 
 			context_menu_show($(this), event, menu_entries, context_menu_handler, menu_defaults);
 			return false;
@@ -5838,90 +5417,6 @@ $(document).ready(function() {
 		open: collectables_show
 	});
 
-	wf_attack = $('div.attack').windowframe({
-		width: 500,
-		header: 'Attack',
-		info: '<p>Use this tool to make a d20 attack roll against the selected creature. The result will be shown in the sidebar.</p><p>An advantage roll uses the highest score of two d20 dice rolls. A disadvantage roll uses the lowest score of two d20 dice rolls.</p><p>The attack roll is compared to the selected creature\'s armor class. The result is also shown in the sidebar.</p>',
-		open: function() {
-			var input = wf_attack.find('input');
-			var length = input.val().length;
-			input.focus();
-			input[0].setSelectionRange(length, length);
-		},
-		buttons: {
-			'Ok': function() {
-				var bonus = parseInt(wf_attack.find('input').val());
-				wf_attack.close();
-
-				if (isNaN(bonus)) {
-					write_sidebar('Invalid attack bonus.');
-					return;
-				}
-
-				var obj = wf_attack.parent().parent().data('param');
-				var armor_class = parseInt(obj.attr('armor_class'));
-				var message = 'Target: ' + object_target_link(obj) + '\n';
-				var type = wf_attack.find('select').val();
-
-				dice = [ '1d20' ];
-				if (type != 'Normal') {
-					dice.push('1d20');
-				}
-
-				dice_roll(dice, bonus, function(result, extra) {
-					var roll = result[0];
-
-					if (type == 'Advantage') {
-						if (result[1] > roll) {
-							roll = result[1];
-						}
-					} else if (type == 'Disadvantage') {
-						if (result[1] < roll) {
-							roll = result[1];
-						}
-					}
-
-					var details = '';
-					if (type != 'Normal') {
-						details += type + ': [' + result[0] + '] [' + result[1] + '] > [' + roll + ']\n';
-					}
-					details += 'Attack roll: [' + roll + ']';
-					if (bonus > 0) {
-						details += ' + ' + bonus + ' = ' + (roll + bonus);
-					}
-					details += '\n';
-
-					if (dungeon_master == false) {
-						message += details;
-					}
-
-					message += 'Result: ';
-
-					if (roll == 20) {
-						message += 'CRIT!';
-					} else if (((roll + bonus) >= armor_class) && (roll > 1)) {
-						message += 'hit!';
-					} else {
-						message += 'miss';
-					}
-
-					send_message(message, character_name);
-
-					if (dungeon_master) {
-						message = details;
-						if (obj.attr('armor_class') != undefined) {
-							message += 'Armor class: ' + obj.attr('armor_class');
-						}
-						write_sidebar(message);
-					}
-				});
-			},
-			'Cancel': function() {
-				wf_attack.close();
-			}
-		}
-	});
-
 	wf_journal = $('div.journal').windowframe({
 		activator: 'button.show_journal',
 		style: 'info',
@@ -5980,14 +5475,6 @@ $(document).ready(function() {
 	 */
 	$('div.playarea').on('mousedown', store_mouse_position);
 
-	var conditions = localStorage.getItem('conditions');
-	if (conditions != undefined) {
-		conditions = JSON.parse(conditions);
-		for (var [key, value] of Object.entries(conditions)) {
-			set_conditions($('div#' + key), value);
-		}
-	}
-
 	var audio_file = $('div.playarea').attr('audio');
 	if (audio_file != undefined) {
 		var audio = new Audio(audio_file);
@@ -6028,6 +5515,11 @@ $(document).ready(function() {
 		$('div.characters div.character img').on('click', object_click_mobile);
 		$('div.tokens div.token img').on('click', object_click_mobile);
 	}
+
+	/* Dice roll initialize
+	 */
+	var support_crit_rolls = ($('div.playarea').attr('rule_system') == 'dnd5');
+	dice_roll_initialize(support_crit_rolls);
 
 	/* Cauldron20 browser extension
 	 */

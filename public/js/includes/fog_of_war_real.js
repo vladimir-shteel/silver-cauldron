@@ -313,6 +313,10 @@ function fog_of_war_set_distance(distance) {
 }
 
 function fog_of_war_update(obj) {
+	if (fow_ctx == null) {
+		return;
+	}
+
 	var half_cell = (grid_cell_size >> 1);
 	var obj_pos = object_position(obj);
 	var obj_x = obj_pos.left + half_cell;

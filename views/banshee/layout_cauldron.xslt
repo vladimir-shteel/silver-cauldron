@@ -34,7 +34,7 @@ div.wrapper > div.header {
 <xsl:value-of select="inline_css" />
 </style>
 <xsl:for-each select="javascripts/javascript">
-<script type="text/javascript" src="{.}"></script><xsl:text>
+<script type="{@type}" src="{.}"></script><xsl:text>
 </xsl:text></xsl:for-each>
 </head>
 
@@ -95,7 +95,7 @@ div.wrapper > div.header {
 	<div class="footer">
 		<div class="container">
 			<span>Cauldron VTT v<xsl:value-of select="/output/cauldron/version" /></span>
-			<span><a href="/privacy">Privacy statement</a></span>>
+			<span><a href="/privacy">Privacy statement</a></span>
 			<span>Join on <a href="https://discord.gg/w8FB93taYJ" target="_blank">Discord</a></span>
 			<xsl:if test="/output/user">
 			<span>Logged in as <a href="/account"><xsl:value-of select="/output/user" /></a></span>

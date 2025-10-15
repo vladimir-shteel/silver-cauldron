@@ -48,12 +48,15 @@
 <xsl:if test="role/@id">
 <input type="hidden" name="id" value="{role/@id}" />
 </xsl:if>
+<div class="form-group">
 <label for="name">Name:</label>
 <input type="text" id="name" name="name" value="{role}" class="form-control">
 <xsl:if test="role/@editable='no'">
 	<xsl:attribute name="disabled">disabled</xsl:attribute>
 </xsl:if>
 </input>
+</div>
+<div class="form-group">
 <div>Allow non-admins to assign this role: <input type="checkbox" name="non_admins">
 <xsl:if test="role/@non_admins='yes'">
 	<xsl:attribute name="checked">checked</xsl:attribute>
@@ -62,6 +65,7 @@
 	<xsl:attribute name="disabled">disabled</xsl:attribute>
 </xsl:if>
 </input></div>
+</div>
 
 <xsl:for-each select="pages/page">
 	<div class="role">

@@ -12,7 +12,6 @@ var Box = new DiceBox('#dice-box', {
 	gravity: 5
 });
 
-var dicebox_addition;
 var dicebox_busy = false;
 var dicebox_timeout = undefined;
 var dicebox_callback = undefined;
@@ -29,7 +28,7 @@ Box.onRollComplete = function(rollResult) {
 		});
 	});
 
-	dicebox_callback(results, dicebox_addition);
+	dicebox_callback(results);
 	dicebox_callback = undefined;
 
 	dicebox_timeout = window.setTimeout(function() {
@@ -40,12 +39,11 @@ Box.onRollComplete = function(rollResult) {
 	dicebox_busy = false;
 };
 
-function dice_roll_3d(dice, addition, callback) {
+function dice_roll_3d(dice, callback) {
 	if (dicebox_busy) {
 		return false;
 	}
 
-	dicebox_addition = addition;
 	dicebox_callback = callback;
 	dicebox_busy = true;
 

@@ -9,7 +9,36 @@ var half_gcs = null;
 var sea_active = false;
 var sea_cone_angle = null;
 
-function spell_effect_area_init() {
+var sea_submenu = { name:'Spell effect area', icon:'fa-magic', items:{
+	'sea_circle': { name:'Circle', icon:'fa-circle' },
+	'sea_cone': { name:'Cone', icon:'fa-play' },
+	'sea_square': { name:'Square', icon:'fa-stop' },
+	'sep': '-',
+	'sea_cone_angle': { name:'Change cone angle', icon:'fa-edit' }
+}};
+
+function sea_context_menu_handler(key, obj) {
+	switch (key) {
+		case 'sea_cone':
+			spell_effect_area_cone(mouse_x, mouse_y);
+			break;
+		case 'sea_cone_angle':
+			spell_effect_area_change_cone_angle();
+			break;
+		case 'sea_circle':
+			spell_effect_area_circle(mouse_x, mouse_y);
+			break;
+		case 'sea_square':
+			spell_effect_area_square(mouse_x, mouse_y);
+			break;
+		default:
+			return false;
+	}
+
+	return true;
+}
+
+function spell_effect_area_initialize() {
 	var map = $('div.playarea > div');
 	var width = Math.round(map.width());
 	var height = Math.round(map.height());

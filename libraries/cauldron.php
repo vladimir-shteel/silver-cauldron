@@ -1,5 +1,5 @@
 <?php
-	define("CAULDRON_VERSION", "3.8");
+	define("CAULDRON_VERSION", "4.0");
 
 	define("UPDATE_TABLES", array("menu", "pages"));
 
@@ -29,13 +29,18 @@
 	define("JOURNAL_UNKNOWN_USER", "<unknown>");
 	define("AGENDA_KEY_LENGTH", 10);
 
+	define("ADVENTURE_CUSTOM_OPTIONS", 1);
+
+	define("CHARACTER_OPTIONS", array("hitpoints", "armor_class", "initiative"));
+	define("CHARACTER_CUSTOM_OPTIONS", 3);
+
+	define("TOKEN_CUSTOM_OPTIONS", 2);
+
 	define("USER_SUB_DIRECTORIES", array("audio", "brushes", "characters",
 		"collectables", "effects", "maps", "pictures", "tokens"));
 
-	define("CONDITIONS", array("blinded", "charmed", "deafened", "exhausted",
-		"frightened", "grappled", "incapacitated", "invisible", "paralyzed",
-		"petrified", "poisoned", "prone", "restrained", "stunned", "unconscious",
-		"A / red", "B / orange", "C / yellow", "D / green", "E / blue", "F / purple"));
+	define("CONDITIONS_GENERIC", array("A / red", "B / orange", "C / yellow",
+		"D / green", "E / blue", "F / purple"));
 
 	define("TOKEN_DEFAULT_AC", 10);
 	define("TOKEN_DEFAULT_HP", 4);

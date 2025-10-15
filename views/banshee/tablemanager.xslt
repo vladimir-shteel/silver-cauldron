@@ -83,6 +83,7 @@
 
 <xsl:for-each select="form/element">
 <div>
+<div class="form-group">
 <label for="{@name}"><xsl:value-of select="label" />:</label>
 <xsl:choose>
 	<!-- Boolean -->
@@ -126,6 +127,7 @@
 		<input type="text" id="{@name}" name="{@name}" value="{value}" class="form-control" />
 	</xsl:otherwise>
 </xsl:choose>
+</div>
 </div>
 </xsl:for-each>
 

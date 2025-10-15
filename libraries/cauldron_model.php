@@ -1,11 +1,37 @@
 <?php
 	abstract class cauldron_model extends Banshee\model {
+		private $rule_system = null;
+
 		public function __get($key) {
 			switch ($key) {
 				case "active_adventure_id": return $_SESSION["edit_adventure_id"] ?? null;
+				case "rule_system": return $this->rule_system;
 			}
 
 			return null;
+		}
+
+		public function load_rule_system($rule_system_id, &$name = null, &$code = null) {
+			if (($rule_system = $this->db->entry("rule_systems", $rule_system_id)) == false) {
+				return false;
+			}
+
+			$name = $rule_system["name"];
+			$code = $rule_system["code"];
+
+			$rule_system_class = $rule_system["code"]."_rule_system";
+
+			if (class_exists($rule_system_class) == false) {
+				return false;
+			}
+
+			if ($this->rule_system !== null) {
+				unset($this->rule_system);
+			}
+
+			$this->rule_system = new $rule_system_class($this->db, $this->user, $this->view, $rule_system);
+
+			return true;
 		}
 
 		public function get_my_adventures($all = false) {
@@ -13,7 +39,7 @@
 				return false;
 			}
 
-			$query = "select * from adventures where dm_id=%d";
+			$query = "select * from adventures where dm_id=%d order by title";
 			if (($result = $this->db->execute($query, $this->user->id)) === false) {
 				return false;
 			}

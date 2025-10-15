@@ -1,5 +1,5 @@
 <?php
-	class adventure_controller extends Banshee\controller {
+	class adventure_controller extends cauldron_controller {
 		protected $prevent_repost = false;
 
 		private function format_text($text) {
@@ -47,6 +47,14 @@
 				$this->view->add_tag("result", "Adventure not found.");
 				return;
 			}
+
+			if ($this->model->load_rule_system($adventure["rule_system_id"]) == false) {
+				$this->view->add_tag("result", "Invalid rule system.");
+				return;
+			}
+
+			$this->view->add_css("rule_systems/".$this->model->rule_system->code.".css");
+
 			$user_is_dungeon_master = ($adventure["dm_id"] == $this->user->id);
 
 			if (($adventure["access"] == ADVENTURE_ACCESS_DM_ONLY) && ($user_is_dungeon_master == false)) {
@@ -99,11 +107,6 @@
 				}
 
 				if (($characters = $this->model->get_characters($adventure["active_map_id"])) === false) {
-					$this->view->add_tag("result", "Database error.");
-					return;
-				}
-
-				if (($conditions = $this->model->get_conditions()) === false) {
 					$this->view->add_tag("result", "Database error.");
 					return;
 				}
@@ -196,14 +199,13 @@
 				$this->view->add_javascript("includes/library.js");
 				$this->view->add_javascript("includes/script.js");
 				$this->view->add_javascript("includes/dice_roll.js");
-				$this->view->add_javascript("includes/combat.js");
-				$this->view->add_javascript("includes/spells.js");
-				$this->view->add_javascript("includes/spell_effect_area.js");
 				$this->view->add_javascript("includes/keyboard.js");
 				$this->view->add_javascript("../dice-box/loader.js");
 				if (is_true($active_map["show_grid"])) {
 					$this->view->add_javascript("includes/grid.js");
 				}
+
+				$this->model->rule_system->start_adventure();
 
 				$this->view->add_javascript("adventure.js");
 
@@ -229,14 +231,18 @@
 				$this->view->add_css("banshee/font-awesome.css");
 				$this->view->add_css("includes/context_menu.css");
 				$this->view->add_css("includes/dice_roll.css");
-				$this->view->add_css("includes/combat.css");
-				$this->view->add_css("includes/spells.css");
 			}
 
 			$attr = array(
 				"id"    => $adventure["id"],
 				"is_dm" => show_boolean($user_is_dungeon_master));
 			$this->view->open_tag("adventure", $attr);
+
+			for ($i = 0; $i < ADVENTURE_CUSTOM_OPTIONS; $i++) {
+				$this->view->add_tag("custom", $adventure["custom".$i]);
+				unset($adventure["custom".$i]);
+			}
+
 			$this->view->record($adventure);
 
 			$group_key = hash_hmac("sha256", $adventure["title"], $this->settings->secret_website_code);
@@ -294,6 +300,7 @@
 				$active_map["drag_character"] = show_boolean($active_map["drag_character"]);
 				$active_map["url"] = $this->model->resource_path($active_map["url"]);
 				$active_map["url"] = str_replace(" ", "%20", $active_map["url"]);
+				$active_map["audio"] = $this->model->resource_path($active_map["audio"]);
 
 				$this->view->record($active_map, "map");
 
@@ -386,7 +393,17 @@
 						$token["c_hide"] = show_boolean($token["c_hide"]);
 						$token["c_found"] = show_boolean($token["c_found"]);
 					}
-					$this->view->record($token, "token");
+
+					$this->view->open_tag("token", array("id" => $token["id"]));
+
+					for ($i = 0; $i < TOKEN_CUSTOM_OPTIONS; $i++) {
+						$this->view->add_tag("custom", $token["custom".$i]);
+						unset($token["custom".$i]);
+					}
+
+					$this->view->record($token);
+
+					$this->view->close_tag();
 				}
 				$this->view->close_tag();
 
@@ -409,7 +426,11 @@
 					$character["width"] = $grid_cell_size;
 					$character["height"] = $grid_cell_size;
 					$character["hidden"] = show_boolean($character["hidden"]);
-					$character["perc"] = round(100 * $character["damage"] / $character["hitpoints"]);
+					if ($character["hitpoints"] > 0) {
+						$character["perc"] = round(100 * $character["damage"] / $character["hitpoints"]);
+					} else {
+						$character["perc"] = 0;
+					}
 					$character["orig_src"] = "characters/".$character["id"].".".$character["extension"];
 					if ($character["token_id"] != null) {
 						$character["src"] = "tokens/".$character["token_id"].".".$character["token_extension"];
@@ -422,7 +443,17 @@
 					} else {
 						$character["src"] = $character["orig_src"];
 					}
-					$this->view->record($character, "character");
+
+					$this->view->open_tag("character", array("id" => $character["id"]));
+
+					for ($i = 0; $i < CHARACTER_CUSTOM_OPTIONS; $i++) {
+						$this->view->add_tag("custom", $character["custom".$i]);
+						unset($character["custom".$i]);
+					}
+
+					$this->view->record($character);
+
+					$this->view->close_tag();
 				}
 				$this->view->close_tag();
 
@@ -449,11 +480,14 @@
 
 				/* Conditions
 				 */
-				$this->view->open_tag("conditions");
-				foreach ($conditions as $condition) {
-					$this->view->add_tag("condition", $condition["name"], array("id" => $condition["id"]));
+				$conditions = $this->model->rule_system->conditions;
+				if (count($conditions) > 0) {
+					$this->view->open_tag("conditions");
+					foreach ($conditions as $condition) {
+						$this->view->add_tag("condition", $condition["name"], array("id" => $condition["id"]));
+					}
+					$this->view->close_tag();
 				}
-				$this->view->close_tag();
 
 				/* Journal
 				 */

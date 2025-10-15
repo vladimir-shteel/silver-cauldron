@@ -19,27 +19,41 @@
 <xsl:template match="edit">
 <xsl:call-template name="show_messages" />
 <form action="/{/output/page}" method="post">
+<div class="form-group">
 <label for="fullname">Name:</label>
 <input type="text" id="fullname" name="fullname" value="{fullname}" class="form-control" />
+</div>
+<div class="form-group">
 <label for="email">E-mail address:</label>
 <input type="text" id="email" name="email" value="{email}" class="form-control" />
+</div>
+<div class="form-group">
 <label for="keyboard">Keyboard layout:</label>
 <select id="keyboard" name="keyboard" class="form-control">
 <xsl:for-each select="keyboards/keyboard">
 <option value="{@value}"><xsl:if test="@value=../../keyboard"><xsl:attribute name="selected">selected</xsl:attribute></xsl:if><xsl:value-of select="." /></option>
 </xsl:for-each>
 </select>
+</div>
+<div class="form-group">
 <label for="current">Current password:</label>
 <input type="password" id="current" name="current" class="form-control" />
+</div>
+<div class="form-group">
 <label for="password">New password:</label> <span class="blank" style="font-size:10px">(will not be changed when left blank)</span>
 <input type="password" id="password" name="password" class="form-control" />
+</div>
+<div class="form-group">
 <label for="repeat">Repeat password:</label>
 <input type="password" id="repeat" name="repeat" class="form-control" />
+</div>
 <xsl:if test="@authenticator='yes'">
+<div class="form-group">
 <label for="secret">Authenticator secret:</label> [<span class="info" onClick="javascript:$('#as_dialog').dialog()">?</span>]
 <div class="input-group">
 	<input type="text" id="secret" name="authenticator_secret" value="{authenticator_secret}" class="form-control" style="text-transform:uppercase" />
 	<span class="input-group-btn"><input type="button" value="Generate" class="btn btn-default" onClick="javascript:set_authenticator_code()" /></span>
+</div>
 </div>
 </xsl:if>
 

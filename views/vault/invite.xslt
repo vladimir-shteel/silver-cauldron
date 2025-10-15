@@ -30,10 +30,12 @@
 <xsl:call-template name="show_messages" />
 
 <form method="post" action="/{/output/page}">
+<div class="form-group">
 <label for="invitation_code">Invitation code:</label>
 <div class="input-group">
 <span class="input-group-addon"><xsl:value-of select="organisation_id" />-</span>
 <input type="text" id="invitation_code" name="invitation_code" value="{invitation_code}" maxlength="50" class="form-control" />
+</div>
 </div>
 
 <div class="btn-group edit">

@@ -27,7 +27,7 @@
 		} else {
 			printf("<p>I'm sorry you encountered this error. The website administrator has been notified about the problem. It will be solved soon.</p>\n");
 			$message = sprintf("%s=> %s\nline %d in %s\n", $previous, $error->getMessage(), $error->getLine(), $error->getFile());
-			$error_handler = new website_error_handler($GLOBALS["_view"], $GLOBALS["_settings"], $GLOBALS["_user"]);
+			$error_handler = new website_error_handler($GLOBALS["_view"] ?? null, $GLOBALS["_settings"] ?? null, $GLOBALS["_user"] ?? null);
 			$error_handler->execute($message);
 		}
 
@@ -92,6 +92,10 @@
 		 * ERROR:  -
 		 */
 		private function add_to_view($errors) {
+			if ($this->view == null) {
+				return;
+			}
+
 			$errors = htmlentities($errors);
 			$errors = str_replace("\t", "    ", $errors);
 			$errors = explode("\n", $errors);
@@ -117,6 +121,10 @@
 		 * ERROR:  -
 		 */
 		private function send_via_email($errors) {
+			if (($this->user == null) || ($this->settings == null)) {
+				return;
+			}
+
 			$username = $this->user->username;
 			$message =
 				"Date, time: ".date("j F Y, H:i:s")."\n".

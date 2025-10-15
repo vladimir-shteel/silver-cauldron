@@ -432,6 +432,10 @@ function fog_of_war_pattern(pattern, obj)  {
 }
 
 function fog_of_war_update(obj) {
+	if (fow_ctx == null) {
+		return;
+	}
+
     requestAnimationFrame(() => {
         const original_pos = object_position(obj);
         let obj_x = original_pos.left + (grid_cell_size / 2);

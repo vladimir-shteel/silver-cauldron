@@ -266,7 +266,9 @@ function _spell_show_details(name) {
 	container.append(details);
 }
 
-$(window).ready(function() {
+function spells_initialize() {
+	$('div.menu button.show_dice').after('<button class="btn btn-default btn-sm show_spells">Spells</button>');
+
 	$.get('/data/spells', function(data) {
 		var spells = JSON.parse($(data).text().replaceAll('&amp;', '&'));
 
@@ -326,7 +328,7 @@ $(window).ready(function() {
 
 		list.find('div').first().trigger('click');
 	});
-});
+}
 
 /* Fog of War interface
  */

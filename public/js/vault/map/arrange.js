@@ -187,24 +187,6 @@ function set_condition(obj, condition, set_only = true) {
 
 /* Object functions
  */
-function object_armor_class(obj) {
-	var armor_class = obj.attr('armor_class');
-
-	cauldron_prompt('Armor class:', armor_class, function(armor_class) {
-		if (isNaN(armor_class)) {
-			write_sidebar('Invalid armor class.');
-			return;
-		}
-
-		obj.attr('armor_class', armor_class);
-
-		$.post('/object/armor_class', {
-			instance_id: obj.prop('id'),
-			armor_class: armor_class
-		});
-	});
-}
-
 function object_create(icon, x, y) {
 	if ($(icon).hasClass('icon')) {
 		// New token
@@ -218,6 +200,7 @@ function object_create(icon, x, y) {
 		var type = $(icon).parent().find('div.name').text();
 		var rotation = ($(icon).attr('type') == 'topdown' ? 180 : 0);
 		var hidden = 'no';
+		var token_type = $(icon).attr('type');
 
 		var scr = screen_scroll();
 		x += scr.left - 30;
@@ -234,6 +217,7 @@ function object_create(icon, x, y) {
 		var type = $(icon).parent().attr('type');
 		var rotation = $(icon).parent().attr('rotation');
 		var hidden = $(icon).parent().attr('is_hidden');
+		var token_type = $(icon).parent().attr('token_type');
 	}
 
 	x = coord_to_grid(x, false);
@@ -247,7 +231,7 @@ function object_create(icon, x, y) {
 	}).done(function(data) {
 		var instance_id = $(data).find('instance_id').text();
 
-		var obj = '<div id="token' + instance_id + '" token_id="' + token_id +'" class="token" style="left:' + x + 'px; top:' + y + 'px; width:' + width + 'px; z-index:' + DEFAULT_Z_INDEX + '" type="' + type + '" is_hidden="' + hidden + '" rotation="0" armor_class="' + armor_class + '" hitpoints="' + hitpoints + '" damage="' + damage + '" name="">' +
+		var obj = '<div id="token' + instance_id + '" token_id="' + token_id +'" class="token" style="left:' + x + 'px; top:' + y + 'px; width:' + width + 'px; z-index:' + DEFAULT_Z_INDEX + '" type="' + type + '" is_hidden="' + hidden + '" rotation="0" armor_class="' + armor_class + '" hitpoints="' + hitpoints + '" damage="' + damage + '" token_type="' + token_type + '" name="">' +
 		          '<img src="' + url + '" style="height:' + height + 'px" />' +
 		          '</div>';
 
@@ -296,51 +280,6 @@ function object_create(icon, x, y) {
 	}).fail(function() {
 		write_sidebar('Error creating object.');
 	});
-}
-
-function object_damage(obj) {
-	var hitpoints = obj.attr('hitpoints');
-	var damage = obj.attr('damage');
-
-	cauldron_prompt('Damage (hitpoints=' + hitpoints + '):', damage, function(damage) {
-		if (isNaN(damage)) {
-			write_sidebar('Invalid damage.');
-			return;
-		}
-
-		if (damage < 0) {
-			damage = 0;
-		} else if (damage > hitpoints) {
-			damage = hitpoints;
-		}
-
-		obj.attr('damage', damage);
-
-		$.post('/object/damage', {
-			instance_id: obj.prop('id'),
-			damage: damage
-		});
-	});
-}
-
-function object_damage_command(obj, points) {
-	var hitpoints = parseInt(obj.attr('hitpoints'));
-	var damage = parseInt(obj.attr('damage'));
-	damage += points;
-
-	if (damage > hitpoints) {
-		damage = hitpoints;
-	} else if (damage < 0) {
-		damage = 0;
-	}
-
-	obj.attr('damage', damage);
-
-	if (points > 0) {
-		points = '+' + points.toString();
-	}
-
-	write_sidebar('Character damage:<br />' + points + ' (' + damage + '/' + hitpoints + ')');
 }
 
 function object_delete(obj) {
@@ -434,24 +373,6 @@ function object_hide_command(obj) {
 	});
 }
 
-function object_hitpoints(obj) {
-	var hitpoints = obj.attr('hitpoints');
-
-	cauldron_prompt('Hitpoints:', hitpoints, function(hitpoints) {
-		if (isNaN(hitpoints)) {
-			write_sidebar('Invalid hitpoints.');
-			return;
-		}
-
-		obj.attr('hitpoints', hitpoints);
-
-		$.post('/object/hitpoints', {
-			instance_id: obj.prop('id'),
-			hitpoints: hitpoints
-		});
-	});
-}
-
 function object_info(obj) {
 	var info ='';
 
@@ -460,10 +381,7 @@ function object_info(obj) {
 	}
 
 	if (obj.attr('id').substring(0, 4) != 'zone') {
-		info +=
-			'Armor class: ' + obj.attr('armor_class') + '<br />' +
-			'Hitpoints: ' + obj.attr('hitpoints') + '<br />' +
-			'Damage: ' + obj.attr('damage') + '<br />';
+		info += rule_system_object_info(obj);
 	}
 
 	var name = obj.attr('name');
@@ -739,10 +657,12 @@ function object_token_context_menu(objects) {
 				'delete': { name:'Delete', icon:'fa-trash' }
 			};
 		} else {
-			var menu_entries = {
-				'info': { name:'Get information', icon:'fa-info-circle' },
-				'name': { name:'Set name', icon:'fa-edit' },
-				'rotate': { name:'Rotate', icon:'fa-compass', items:{
+			var menu_entries = {}
+			menu_entries['info'] = { name:'Get information', icon:'fa-info-circle' };
+			menu_entries['name'] = { name:'Set name', icon:'fa-edit' };
+
+			if (obj.attr('token_type') == 'topdown') {
+				menu_entries['rotate'] = { name:'Rotate', icon:'fa-compass', items:{
 					'rotate_n':  { name:'North', icon:'fa-arrow-circle-up' },
 					'rotate_ne': { name:'North East' },
 					'rotate_e':  { name:'East', icon:'fa-arrow-circle-right' },
@@ -750,33 +670,31 @@ function object_token_context_menu(objects) {
 					'rotate_s':  { name:'South', icon:'fa-arrow-circle-down' },
 					'rotate_sw': { name:'South West' },
 					'rotate_w':  { name:'West', icon:'fa-arrow-circle-left' },
-					'rotate_nw': { name:'North West' },
-				}},
-				'presence': { name:'Toggle presence', icon:'fa-low-vision' },
-				'collectable': { name:'Assign collectable', icon:'fa-key' },
-				'fow': { name:'Toggle Fog of War', icon:'fa-cloud' },
-				'sep1': '-',
-				'armor_class': { name:'Set armor class', icon:'fa-shield' },
-				'hitpoints': { name:'Set hitpoints', icon:'fa-heartbeat' },
-				'damage': { name:'Set damage', icon:'fa-warning' },
-				'sep2': '-',
-				'distance': { name:'Measure distance', icon:'fa-map-signs' },
-				'coordinates': { name:'Get coordinates', icon:'fa-flag' },
-				'sep3': '-',
-				'blinder_create': { name:'Create blinder', icon:'fa-eye-slash' },
-				'door_create': { name:'Create door', icon:'fa-columns' },
-				'wall_create': { name:'Create wall', icon:'fa-th-large' },
-				'window_create': { name:'Create window', icon:'fa-window-maximize' },
-				'zone_create': { name:'Create zone', icon:'fa-square-o' },
-				'sep4': '-',
-				'lower': { name:'Lower', icon:'fa-arrow-down' },
-				'duplicate': { name:'Duplicate', icon:'fa-copy' },
-				'delete': { name:'Delete', icon:'fa-trash' }
-			};
-
-			if (obj.attr('token_type') == 'portrait') {
-				delete menu_entries['rotate'];
+					'rotate_nw': { name:'North West' }}};
 			}
+
+			menu_entries['presence'] = { name:'Toggle presence', icon:'fa-low-vision' };
+			menu_entries['collectable'] = { name:'Assign collectable', icon:'fa-key' };
+			menu_entries['fow'] = { name:'Toggle Fog of War', icon:'fa-cloud' };
+			menu_entries['sep1'] = '-';
+
+			menu_entries = rule_system_menu_token_dm(menu_entries, obj);
+			if (object_last_item(menu_entries) != '-') {
+				menu_entries['sep2'] = '-';
+			}
+
+			menu_entries['distance'] = { name:'Measure distance', icon:'fa-map-signs' };
+			menu_entries['coordinates'] = { name:'Get coordinates', icon:'fa-flag' };
+			menu_entries['sep3'] = '-';
+			menu_entries['blinder_create'] = { name:'Create blinder', icon:'fa-eye-slash' };
+			menu_entries['door_create'] = { name:'Create door', icon:'fa-columns' };
+			menu_entries['wall_create'] = { name:'Create wall', icon:'fa-th-large' };
+			menu_entries['window_create'] = { name:'Create window', icon:'fa-window-maximize' };
+			menu_entries['zone_create'] = { name:'Create zone', icon:'fa-square-o' };
+			menu_entries['sep4'] = '-';
+			menu_entries['lower'] = { name:'Lower', icon:'fa-arrow-down' };
+			menu_entries['duplicate'] = { name:'Duplicate', icon:'fa-copy' };
+			menu_entries['delete'] = { name:'Delete', icon:'fa-trash' };
 		}
 
 		context_menu_show($(this), event, menu_entries, context_menu_handler, menu_defaults);
@@ -1610,10 +1528,11 @@ function context_menu_handler(key) {
 		var direction = parts[1];
 	}
 
+	if (rule_system_context_menu_handler(key, obj)) {
+		return;
+	}
+
 	switch (key) {
-		case 'armor_class':
-			object_armor_class(obj);
-			break;
 		case 'blinder_create':
 			blinder_create_command();
 			break;
@@ -1624,9 +1543,6 @@ function context_menu_handler(key) {
 			var pos_x = Math.round(coord_to_grid(mouse_x, false) / grid_cell_size);
 			var pos_y = Math.round(coord_to_grid(mouse_y, false) / grid_cell_size);
 			write_sidebar('Coordinates: ' + pos_x + ',' + pos_y);
-			break;
-		case 'damage':
-			object_damage(obj);
 			break;
 		case 'delete':
 			cauldron_confirm('Delete object(s)?', function() {
@@ -1942,9 +1858,6 @@ function context_menu_handler(key) {
 					object_hide_command(obj);
 				}
 			}
-			break;
-		case 'hitpoints':
-			object_hitpoints(obj);
 			break;
 		case 'lower':
 			z_index--;
@@ -2574,4 +2487,8 @@ $(document).ready(function() {
 	write_sidebar('While creating a blinder, wall or window, hold CTRL to create consecutive constructs.');
 	write_sidebar('Press ALT to get blinders off the grid. Add SHIFT to make them horizontal or vertical.');
 	write_sidebar('Double-click a blinder, door, wall or window while holding SHIFT to delete the construct.');
+
+	/* Rule system initialize
+	 */
+	rule_system_initialize();
 });

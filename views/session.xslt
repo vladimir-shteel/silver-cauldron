@@ -48,8 +48,10 @@
 <form action="/session" method="post">
 <input type="hidden" name="id" value="{session/@id}" />
 
+<div class="form-group">
 <label for="name">Name:</label>
 <input type="text" id="name" name="name" value="{session/name}" class="form-control" />
+</div>
 
 <div class="btn-group">
 <input type="submit" name="submit_button" value="Update session" class="btn btn-default" />

@@ -1,3 +1,7 @@
+div.rule_systems {
+	width:100%;
+}
+
 div.panel img {
 	max-width:100px;
 	max-height:100px;
@@ -22,6 +26,10 @@ div.content div.panel-body {
 	height:130px;
 }
 
+div.content div.panel-body div:nth-of-type(n+6) {
+	display:none;
+}
+
 div.content div.panel-footer {
 	white-space:nowrap;
 	overflow:hidden;
@@ -29,6 +37,10 @@ div.content div.panel-footer {
 }
 
 div.content div.panel-footer span {
+	font-style:italic;
+}
+
+div.rule_system {
 	font-style:italic;
 }
 
@@ -67,6 +79,10 @@ div.radio-group span input {
 span.select {
 	display:none;
 	color:#ff0000;
+}
+
+select.btn {
+	height:34px;
 }
 
 /* Alternates

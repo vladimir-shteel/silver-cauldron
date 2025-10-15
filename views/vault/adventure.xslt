@@ -11,13 +11,14 @@
 <xsl:template match="overview">
 <table class="table table-condensed table-striped table-hover">
 <thead>
-<tr><th>ID</th><th>Title</th><th>Maps</th><th>Players</th><th>Access</th></tr>
+<tr><th>ID</th><th>Title</th><th>Rule system</th><th>Maps</th><th>Players</th><th>Access</th></tr>
 </thead>
 <tbody>
 <xsl:for-each select="adventures/adventure">
 <tr class="click" onClick="javascript:document.location='/{/output/page}/{@id}'">
 <td><xsl:value-of select="@id" /></td>
 <td><xsl:value-of select="title" /></td>
+<td><xsl:value-of select="rule_system" /></td>
 <td><xsl:value-of select="maps" /></td>
 <td><xsl:value-of select="players" /></td>
 <td><xsl:value-of select="access" /></td>
@@ -37,7 +38,7 @@
 </xsl:if>
 
 <div id="help">
-<p>All your adventures are listed here.</p>
+<p>All your adventures are listed here. When creating an adventure, you need to specify a rule system. That defines what options are available during the game. None of the available rule systems are fully implemented. Cauldron VTT only contains a few combat options to make the game play for that rule system a bit easier.</p>
 <p>After creating a new adventure, you will automatically be forwarded to the Maps section, where you can add one or more maps to your adventure. To manually go to the Maps section, click the Back button and then the Maps icon.</p>
 </div>
 </xsl:template>
@@ -54,21 +55,46 @@
 <input type="hidden" name="id" value="{adventure/@id}" />
 </xsl:if>
 
+<div class="form-group">
 <label for="title">Title:</label>
 <input type="text" id="title" name="title" value="{adventure/title}" maxlength="50" placeholder="The title of this adventure / campaign." class="form-control" />
+</div>
+<div class="form-group">
+<label for="rule_systemn_id">Rule system:</label>
+<xsl:if test="adventure/@id">
+<input type="hidden" name="rule_system_id" value="{adventure/rule_system_id}" />
+</xsl:if>
+<select id="rule_system_id" class="form-control">
+<xsl:if test="not(adventure/@id)">
+<xsl:attribute name="name">rule_system_id</xsl:attribute>
+</xsl:if>
+<xsl:if test="adventure/@id">
+<xsl:attribute name="disabled">disabled</xsl:attribute>
+</xsl:if>
+<xsl:for-each select="rule_systems/rule_system">
+<option value="{@id}"><xsl:if test="@id=../../adventure/rule_system_id"><xsl:attribute name="selected">selected</xsl:attribute></xsl:if><xsl:value-of select="." /></option>
+</xsl:for-each>
+</select>
+</div>
+<div class="form-group">
 <label for="image">Title background image URL (optional):</label>
 <div class="input-group">
 <input type="text" id="image" name="image" value="{adventure/image}" placeholder="The image to show in the Adventures page." class="form-control" />
 <span class="input-group-btn"><input type="button" value="Browse resources" class="btn btn-default browser" /></span>
 </div>
+</div>
+<div class="form-group">
 <label for="introduction">Introduction story (optional):</label>
 <textarea id="introduction" name="introduction" class="form-control" placeholder="A story to introduce this adventure to your players."><xsl:value-of select="adventure/introduction" /></textarea>
+</div>
+<div class="form-group">
 <label for="access">Access rights:</label>
 <select id="access" name="access" class="form-control">
 <xsl:for-each select="access/level">
 <option value="{@value}"><xsl:if test="@value=../../adventure/access"><xsl:attribute name="selected">selected</xsl:attribute></xsl:if><xsl:value-of select="." /></option>
 </xsl:for-each>
 </select>
+</div>
 
 <div class="btn-group">
 <input type="submit" name="submit_button" value="Save adventure" class="btn btn-default" />

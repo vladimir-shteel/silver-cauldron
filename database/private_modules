@@ -52,7 +52,7 @@
 	foreach ($columns_new as $col) {
 		if (in_array($col, $columns_db) == false) {
 			print "Adding column '".$col."': ";
-			if ($db->query("alter table roles add %S tinyint default 0", $col) == false) {
+			if ($db->query("alter table roles add %S tinyint(1) not null", $col) == false) {
 				print mysql_error();
 			} else if ($db->query("update roles set %S=1 where id=1", $col) == false) {
 				print mysql_error();

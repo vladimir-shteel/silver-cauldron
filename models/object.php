@@ -37,6 +37,19 @@
 			return $this->db->update("adventures", $adventure_id, $data) !== false;
 		}
 
+		public function adventure_custom_value($adventure_id, $key, $value) {
+			if (($key < 0) || ($key >= ADVENTURE_CUSTOM_OPTIONS)) {
+				return false;
+			}
+
+			if ($this->valid_adventure_id($adventure_id) == false) {
+				return false;
+			}
+
+			$data = array("custom".((int)$key) => (int)$value);
+			return $this->db->update("adventures", $adventure_id, $data) !== false;
+		}
+
 		/* Map functions
 		 */
 		private function valid_map_id($map_id) {
@@ -69,9 +82,8 @@
 				return false;
 			}
 
-			$query = "update maps set start_x=%d, start_y=%d where id=%d";
-
-			return $this->db->query($query, $pos_x, $pos_y, $map_id) != false;
+			$data = array("start_x" => (int)$pos_x, "start_y" => (int)$pos_y);
+			return $this->db->update("maps", $map_id, $data) !== false;
 		}
 
 		/* Token functions
@@ -110,8 +122,8 @@
 				return false;
 			}
 
-			$query = "update map_token set armor_class=%d where id=%d";
-			return $this->db->query($query, $armor_class, $instance_id) !== false;
+			$data = array("armor_class" => (int)$armor_class);
+			return $this->db->update("map_token", $instance_id, $data) !== false;
 		}
 
 		public function token_create($token) {
@@ -133,11 +145,28 @@
 				"hitpoints"   => 0,
 				"damage"      => 0);
 
+			for ($i = 0; $i < TOKEN_CUSTOM_OPTIONS; $i++) {
+				$data["custom".$i] = 0;
+			}
+
 			if ($this->db->insert("map_token", $data) === false) {
 				return false;
 			}
 
 			return $this->db->last_insert_id;
+		}
+
+		public function token_custom_value($instance_id, $key, $value) {
+			if (($key < 0) || ($key >= TOKEN_CUSTOM_OPTIONS)) {
+				return false;
+			}
+
+			if ($this->valid_token_instance_id($instance_id) == false) {
+				return false;
+			}
+
+			$data = array("custom".((int)$key) => (int)$value);
+			return $this->db->update("map_token", $instance_id, $data) !== false;
 		}
 
 		public function token_damage($instance_id, $damage) {
@@ -155,9 +184,8 @@
 				$damage = 0;
 			}
 
-			$query = "update map_token set damage=%d where id=%d";
-
-			return $this->db->query($query, $damage, $instance_id) !== false;
+			$data = array("damage" => (int)$damage);
+			return $this->db->update("map_token", $instance_id, $data) !== false;
 		}
 
 		public function token_delete($instance_id) {
@@ -186,8 +214,8 @@
 				return false;
 			}
 
-			$query = "update map_token set hitpoints=%d where id=%d";
-			return $this->db->query($query, $hitpoints, $instance_id) !== false;
+			$data = array("hitpoints" => (int)$hitpoints);
+			return $this->db->update("map_token", $instance_id, $data) !== false;
 		}
 
 		public function token_move($instance_id, $pos_x, $pos_y) {
@@ -353,9 +381,8 @@
 				$damage = 0;
 			}
 
-			$query = "update characters set damage=%d where id=%d";
-
-			return $this->db->query($query, $damage, $character["id"]) !== false;
+			$data = array("damage" => (int)$damage);
+			return $this->db->update("characters", $character["id"], $data) !== false;
 		}
 
 		public function character_hide($instance_id, $hidden) {
@@ -419,6 +446,23 @@
 			}
 
 			$data = array("vision" => (int)$vision);
+			return $this->db->update("characters", $character["id"], $data) !== false;
+		}
+
+		public function character_custom_value($instance_id, $key, $value) {
+			if (($key < 0) || ($key >= CHARACTER_CUSTOM_OPTIONS)) {
+				return false;
+			}
+
+			if ($this->valid_character_instance_id($instance_id) == false) {
+				return false;
+			}
+
+			if (($character = $this->get_character($instance_id)) == false) {
+				return false;
+			}
+
+			$data = array("custom".((int)$key) => (int)$value);
 			return $this->db->update("characters", $character["id"], $data) !== false;
 		}
 
@@ -803,8 +847,8 @@
 				return false;
 			}
 
-			$query = "update collectables set %S=%d where id=%d";
-			$this->db->query($query, $field, is_true($state) ? YES : NO, $collectable_id);
+			$data = array($field => is_true($state) ? YES : NO);
+			return $this->db->update("collectables", $collectable_id, $data) !== false;
 		}
 
 		/* Journal functions

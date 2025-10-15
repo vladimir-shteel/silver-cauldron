@@ -48,7 +48,7 @@
 <div class="menu">
 <a href="/adventure" class="btn btn-default btn-sm leave">Leave session</a>
 <button class="btn btn-default btn-sm show_journal">Journal</button>
-<xsl:if test="map/type='video'"><button id="playvideo" onClick="javascript:$('video').get(0).play();" class="btn btn-default btn-xs">Play video</button></xsl:if>
+<xsl:if test="map/type='video'"><button id="playvideo" onClick="javascript:$('video').get(0).play();" class="btn btn-default btn-sm">Play video</button></xsl:if>
 <button class="btn btn-default btn-sm show_collectables">Inventory</button>
 <h2>Interface</h2>
 <button id="itfcol" class="btn btn-default btn-sm interface_color">Dark interface</button>

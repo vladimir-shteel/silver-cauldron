@@ -45,8 +45,11 @@
 <input type="hidden" name="id" value="{dice/@id}" />
 </xsl:if>
 
+<div class="form-group">
 <label for="YYY">Name:</label>
 <input type="text" id="name" name="name" value="{dice/name}" maxlength="25" class="form-control" />
+</div>
+<div class="form-group">
 <label>Sides:</label>
 <div id="sides">
 <xsl:for-each select="dice/sides">
@@ -55,6 +58,7 @@
 <input type="text" name="sides[]" value="{.}" class="form-control" />
 </div>
 </xsl:for-each>
+</div>
 </div>
 
 <div class="btn-group">

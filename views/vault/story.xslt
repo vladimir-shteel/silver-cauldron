@@ -190,14 +190,22 @@
 <input type="hidden" name="id" value="{npc/@id}" />
 </xsl:if>
 
+<div class="form-group">
 <label for="name">Name:</label>
 <input type="text" id="name" name="name" value="{npc/name}" maxlength="50" class="form-control" />
+</div>
+<div class="form-group">
 <label for="cr">Challenge Rating:</label>
 <input type="text" id="cr" name="cr" value="{npc/cr}" class="form-control cr" />
+</div>
+<div class="form-group">
 <label for="type">Race, sex and/or class:</label>
 <input type="text" id="type" name="type" value="{npc/type}" maxlength="50" class="form-control" />
+</div>
+<div class="form-group">
 <label for="description">Background, intentions, plans and/or role in the adventure:</label>
 <textarea id="description" name="description" class="form-control"><xsl:value-of select="npc/description" /></textarea>
+</div>
 
 <div class="btn-group">
 <input type="submit" name="submit_button" value="Save NPC" class="btn btn-default" />
@@ -221,13 +229,19 @@
 <input type="hidden" name="id" value="{object/@id}" />
 </xsl:if>
 
+<div class="form-group">
 <label for="name">Name:</label>
 <input type="text" id="name" name="name" value="{object/name}" maxlength="50" class="form-control" />
+</div>
+<div class="form-group">
 <label for="located">Located in:</label>
 <input type="text" id="located" name="located" value="{object/located}" maxlength="50" class="form-control" />
+</div>
+<div class="form-group">
 <label for="description">Description:</label>
 <p>If this is an object, what does it look like and what is it for? If this is a location, what does it look like, what's happening here and what can be found here?</p>
 <textarea id="description" name="description" class="form-control"><xsl:value-of select="object/description" /></textarea>
+</div>
 
 <div class="btn-group">
 <input type="submit" name="submit_button" value="Save object" class="btn btn-default" />
@@ -251,10 +265,14 @@
 <input type="hidden" name="id" value="{event/@id}" />
 </xsl:if>
 
+<div class="form-group">
 <label for="title">Title:</label>
 <input type="text" id="title" name="title" value="{event/title}" maxlength="100" class="form-control" />
+</div>
+<div class="form-group">
 <label for="description">Event:</label>
 <textarea id="description" name="description" class="form-control"><xsl:value-of select="event/description" /></textarea>
+</div>
 
 <div class="btn-group">
 <input type="submit" name="submit_button" value="Save event" class="btn btn-default" />
@@ -278,20 +296,30 @@
 <input type="hidden" name="id" value="{encounter/@id}" />
 </xsl:if>
 
+<div class="form-group">
 <label for="title">Title:</label>
 <input type="text" id="title" name="title" value="{encounter/title}" maxlength="50" class="form-control" />
+</div>
 
 <div class="monsters">
 <xsl:for-each select="encounter/monsters/item">
 <div class="panel panel-primary"><div class="panel-body">
+<div class="form-group">
 <label>Monster:</label>
 <input type="text" name="monsters[{position()}][monster]" value="{monster}" maxlength="50" class="form-control" />
+</div>
+<div class="form-group">
 <label>Number of monsters:</label>
 <input type="text" name="monsters[{position()}][count]" value="{count}" class="form-control" />
+</div>
+<div class="form-group">
 <label>Source:</label>
 <input type="text" name="monsters[{position()}][source]" value="{source}" maxlength="20" class="form-control" />
+</div>
+<div class="form-group">
 <label for="cr">Challenge Rating:</label>
 <input type="text" name="monsters[{position()}][cr]" value="{cr}" class="form-control cr" />
+</div>
 </div></div>
 </xsl:for-each>
 </div>

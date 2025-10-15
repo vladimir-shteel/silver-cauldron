@@ -91,8 +91,11 @@
 <div class="row">
 
 <div class="col-sm-6">
+<div class="form-group">
 <label for="url">URL:</label>
 <input type="text" id="url" name="url" value="{page/url}" class="form-control" />
+</div>
+<div class="form-group">
 <label for="language">Language:</label>
 <select id="language" name="language" class="form-control">
 <xsl:for-each select="languages/language">
@@ -102,6 +105,8 @@
 </option>
 </xsl:for-each>
 </select>
+</div>
+<div class="form-group">
 <label for="layout">Layout:</label>
 <select id="layout" name="layout" class="form-control">
 <xsl:for-each select="layouts/layout">
@@ -111,6 +116,7 @@
 </option>
 </xsl:for-each>
 </select>
+</div>
 <div class="row">
 <div class="col-xs-6">
 <label for="visible">Visible:</label>
@@ -152,33 +158,51 @@
 </div>
 
 <div class="col-sm-6">
+<div class="form-group">
 <label for="title">Title:</label>
 <input type="text" id="title" name="title" value="{page/title}" class="form-control" />
+</div>
+<div class="form-group">
 <label for="description">Description:</label>
 <input type="text" id="description" name="description" value="{page/description}" class="form-control" />
+</div>
+<div class="form-group">
 <label for="keywords">Keywords:</label>
 <input type="text" id="keywords" name="keywords" value="{page/keywords}" class="form-control" />
+</div>
+<div class="form-group">
 <label for="style">Style:</label>
 <textarea id="style" name="style" class="form-control"><xsl:value-of select="page/style" /></textarea>
 </div>
+</div>
 
 </div>
 
+<div class="form-group">
 <label for="editor">Content:</label>
 <textarea id="editor" name="content" class="form-control"><xsl:value-of select="page/content" /></textarea>
+</div>
 <xsl:if test="blocks">
+<div class="form-group">
 <label for="blocks">Available dynamic blocks:</label>
 <div><xsl:value-of select="blocks" /></div>
+</div>
 </xsl:if>
 
 <div id="formsettings">
 <h2>Form settings</h2>
+<div class="form-group">
 <label for="form_submit">Text on submit button:</label>
 <input type="text" id="form_submit" name="form_submit" value="{page/form_submit}" class="form-control" />
+</div>
+<div class="form-group">
 <label for="form_submit">E-mail address to send results to:</label>
 <input type="text" id="form_email" name="form_email" value="{page/form_email}" class="form-control" />
+</div>
+<div class="form-group">
 <label for="form_done">Text to show after submit:</label>
 <textarea id="form_done" name="form_done" class="form-control"><xsl:value-of select="page/form_done" /></textarea>
+</div>
 </div>
 
 <div class="btn-group">

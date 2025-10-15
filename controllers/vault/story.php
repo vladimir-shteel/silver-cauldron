@@ -46,7 +46,7 @@
 
 			$this->view->add_javascript("banshee/jquery.mark.js");
 			$this->view->add_javascript("includes/library.js");
-			$this->view->add_javascript("includes/spells.js");
+			$this->view->add_javascript("rule_systems/spells.js");
 			$this->view->add_javascript("includes/dice_roll.js");
 			$this->view->add_javascript("vault/story.js");
 

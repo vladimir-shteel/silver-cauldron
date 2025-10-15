@@ -33,7 +33,7 @@
 <xsl:call-template name="zone_create" />
 </div>
 <!-- Play area -->
-<div class="playarea" adventure_id="{@id}" map_id="{map/@id}" resources_key="{/output/cauldron/resources_key}" show_grid="{map/show_grid}" grid_cell_size="{@grid_cell_size}" grid_size="{map/grid_size}" offset_x="{map/offset_x}" offset_y="{map/offset_y}">
+<div class="playarea" adventure_id="{@id}" map_id="{map/@id}" armor_class_label="{../rule_system/armor_class_label}" initiative_label="{../rule_system/initiative_label}" resources_key="{/output/cauldron/resources_key}" show_grid="{map/show_grid}" grid_cell_size="{@grid_cell_size}" grid_size="{map/grid_size}" offset_x="{map/offset_x}" offset_y="{map/offset_y}">
 <xsl:if test="characters/@mine"><xsl:attribute name="my_char"><xsl:value-of select="characters/@mine" /></xsl:attribute></xsl:if>
 <div>
 <xsl:if test="map/type='image'"><xsl:attribute name="style">background-image:url(<xsl:value-of select="map/url" />); background-size:<xsl:value-of select="map/width" />px <xsl:value-of select="map/height" />px; width:<xsl:value-of select="map/width" />px; height:<xsl:value-of select="map/height" />px;</xsl:attribute></xsl:if>
@@ -81,6 +81,9 @@
 <div class="tokens">
 <xsl:for-each select="tokens/token">
 <div id="token{instance_id}" token_id="{@id}" class="token" style="left:{pos_x}px; top:{pos_y}px; width:{width}px; display:none;" type="{type}" is_hidden="{hidden}" rotation="{rotation}" armor_class="{armor_class}" hitpoints="{hitpoints}" damage="{damage}" token_type="{token_type}" name="{name}">
+<xsl:for-each select="custom">
+<xsl:attribute name="{concat('custom', position()-1)}"><xsl:value-of select="." /></xsl:attribute>
+</xsl:for-each>
 <img src="/resources/{/output/cauldron/resources_key}/tokens/{@id}.{extension}" style="height:{height}px" />
 <xsl:if test="name!=''">
 <span class="name" known="{known}"><xsl:value-of select="name" /></span>

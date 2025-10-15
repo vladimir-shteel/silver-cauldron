@@ -137,7 +137,7 @@ div.menu {
 	border:1px solid #808080;
 	background-color:#ffffff;
 	border-radius:4px;
-	box-shadow:10px 10px 10px;
+	box-shadow:10px 10px 10px #202020;
 	padding:10px 10px 5px 10px;
 }
 
@@ -896,6 +896,10 @@ div.dark div.playarea {
 	background-color:#101010;
 }
 
+div.dark div.topbar {
+	color:#e0e0e0;
+}
+
 div.dark div.sidebar a {
 	color:#ffa040;
 }
@@ -921,6 +925,7 @@ div.dark div.library div.well {
 
 div.dark div.menu {
 	background-color:#d0d0d0;
+	box-shadow:none;
 }
 
 div.dark div.draw-explain {

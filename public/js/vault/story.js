@@ -162,4 +162,16 @@ $(document).ready(function() {
 	});
 
 	filter_adjust();
+
+	/* Show spells
+	 */
+	spells_initialize();
+
+	$('button.show_spells').on('click', function() {
+		show_spells();
+	});
+
+	/* Roll dice
+	 */
+	dice_roll_initialize();
 });

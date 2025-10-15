@@ -75,16 +75,24 @@
 <xsl:if test="appointment/@id">
 <input type="hidden" name="id" value="{appointment/@id}" />
 </xsl:if>
+<div class="form-group">
 <label for="begin">Begin:</label>
 <input type="text" id="begin" name="begin" value="{appointment/begin}" class="form-control datetimepicker" />
+</div>
+<div class="form-group">
 <label for="end">End (optional):</label>
 <input type="text" id="end" name="end" value="{appointment/end}" class="form-control datetimepicker" />
+</div>
+<div class="form-group">
 <label for="title">Title:</label>
 <input type="text" id="title" name="title" value="{appointment/title}" maxlength="25" class="form-control" />
+</div>
+<div class="form-group">
 <label for="adventure">Adventure:</label>
 <select id="adventure" name="adventure_id" class="form-control">
 <xsl:for-each select="adventures/adventure"><option value="{@id}"><xsl:if test="@id=../../appointment/adventure_id"><xsl:attribute name="selected">selected</xsl:attribute></xsl:if><xsl:value-of select="." /></option></xsl:for-each>
 </select>
+</div>
 
 <div class="btn-group">
 <input type="submit" name="submit_button" value="Save appointment" class="btn btn-default" />

@@ -97,11 +97,9 @@ Create a character if you haven't yet done so. To create a new character, click 
 <button class="btn btn-default btn-sm show_collectables">Inventory</button>
 <button class="btn btn-default btn-sm show_journal">Journal</button>
 <button class="btn btn-default btn-sm show_dice">Roll dice (~)</button>
-<button class="btn btn-default btn-sm show_spells">Spells</button>
 <xsl:if test="@is_dm='yes'">
 <h2>Dungeon Master options</h2>
 <button class="btn btn-default btn-sm play_audio">Audio</button>
-<button class="btn btn-default btn-sm start_combat">Combat</button>
 <xsl:if test="map/dm_notes!=''">
 <button class="btn btn-default btn-sm show_dm_notes">Map notes</button>
 </xsl:if>
@@ -141,11 +139,6 @@ Create a character if you haven't yet done so. To create a new character, click 
 <xsl:if test="map">
 <div class="loading"><span><img src="/images/cauldron.png" />Loading...</span></div>
 <div class="pause"><span><img src="/images/cauldron.png" />Game paused</span></div>
-<!-- Attack -->
-<div class="attack" style="display:none">
-<div><label>Attack bonus:</label><input type="text" value="0" class="form-control" /></div>
-<div><label>Attack type:</label><select class="form-control"><option>Normal</option><option>Advantage</option><option>Disadvantage</option></select></div>
-</div>
 <!-- Conditions -->
 <div class="conditions">
 <xsl:for-each select="conditions/condition">
@@ -183,7 +176,10 @@ Create a character if you haven't yet done so. To create a new character, click 
 </xsl:text></xsl:for-each>
 </div>
 <!-- Play area -->
-<div class="playarea" version="{/output/cauldron/version}" ws_host="{websocket/host}" ws_port="{websocket/port}" group_key="{group_key}" adventure_id="{@id}" map_id="{map/@id}" start_x="{map/start_x}" start_y="{map/start_y}" user_id="{/output/user/@id}" resources_key="{/output/cauldron/resources_key}" is_dm="{@is_dm}" grid_cell_size="{grid_cell_size}" show_grid="{map/show_grid}" offset_x="{map/offset_x}" offset_y="{map/offset_y}" drag_character="{map/drag_character}" fog_of_war="{map/fog_of_war}" fow_distance="{map/fow_distance}" name="{characters/@name}" keyboard="{keyboard}">
+<div class="playarea" version="{/output/cauldron/version}" ws_host="{websocket/host}" ws_port="{websocket/port}" rule_system="{../rule_system/code}" armor_class_label="{../rule_system/armor_class_label}" initiative_label="{../rule_system/initiative_label}" group_key="{group_key}" adventure_id="{@id}" map_id="{map/@id}" start_x="{map/start_x}" start_y="{map/start_y}" user_id="{/output/user/@id}" resources_key="{/output/cauldron/resources_key}" is_dm="{@is_dm}" grid_cell_size="{grid_cell_size}" show_grid="{map/show_grid}" offset_x="{map/offset_x}" offset_y="{map/offset_y}" drag_character="{map/drag_character}" fog_of_war="{map/fog_of_war}" fow_distance="{map/fow_distance}" name="{characters/@name}" keyboard="{keyboard}">
+<xsl:for-each select="custom">
+<xsl:attribute name="{concat('custom', position()-1)}"><xsl:value-of select="." /></xsl:attribute>
+</xsl:for-each>
 <xsl:if test="characters/@mine"><xsl:attribute name="my_char"><xsl:value-of select="characters/@mine" /></xsl:attribute></xsl:if>
 <xsl:if test="map/audio!=''"><xsl:attribute name="audio"><xsl:value-of select="map/audio" /></xsl:attribute></xsl:if>
 <div id="map_background">
@@ -211,6 +207,9 @@ Create a character if you haven't yet done so. To create a new character, click 
 <div class="tokens">
 <xsl:for-each select="tokens/token">
 <div id="token{instance_id}" class="token" style="left:{pos_x}px; top:{pos_y}px; width:{width}px; display:none;" type="{type}" is_hidden="{hidden}" rotation="{rotation}" armor_class="{armor_class}" hitpoints="{hitpoints}" damage="{damage}" token_type="{token_type}" name="{name}">
+<xsl:for-each select="custom">
+<xsl:attribute name="{concat('custom', position()-1)}"><xsl:value-of select="." /></xsl:attribute>
+</xsl:for-each>
 <xsl:if test="c_id!=''">
 <xsl:attribute name="c_id"><xsl:value-of select="c_id" /></xsl:attribute>
 <xsl:attribute name="c_name"><xsl:value-of select="c_name" /></xsl:attribute>
@@ -256,6 +255,9 @@ Create a character if you haven't yet done so. To create a new character, click 
 <div class="characters">
 <xsl:for-each select="characters/character">
 <div id="character{instance_id}" char_id="{@id}" player="{player}" class="character" style="left:{pos_x}px; top:{pos_y}px; width:{width}px;" is_hidden="{hidden}" rotation="{rotation}" token_type="{token_type}" initiative="{initiative}" armor_class="{armor_class}" hitpoints="{hitpoints}" damage="{damage}" vision="{vision}" light="{light}" sheet="{sheet_url}">
+<xsl:for-each select="custom">
+<xsl:attribute name="{concat('custom', position()-1)}"><xsl:value-of select="." /></xsl:attribute>
+</xsl:for-each>
 <div class="hitpoints"><div class="damage" style="width:{perc}%" /></div>
 <img src="/resources/{/output/cauldron/resources_key}/{src}" orig_src="{orig_src}" style="height:{height}px" draggable="false" />
 <span class="name"><xsl:value-of select="name" /></span>

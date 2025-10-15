@@ -272,7 +272,6 @@ function init_grid(grid_cell_size) {
 				slider_fraction.slider('value', fraction);
 				handle_fraction.text(fraction);
 
-console.log(possible_sizes);
 				var ofs_x = Math.round(from_x % cell_size);
 				if (ofs_x > MAX_OFFSET) {
 					ofs_x = 0;

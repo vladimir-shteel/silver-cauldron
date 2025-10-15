@@ -73,8 +73,11 @@
 <xsl:if test="user/@id">
 <input type="hidden" name="id" value="{user/@id}" />
 </xsl:if>
+<div class="form-group">
 <label for="username">Username:</label>
 <input type="text" id="username" name="username" value="{user/username}" class="form-control" />
+</div>
+<div class="form-group">
 <label for="password">Password:</label>
 <span class="generate"><input type="checkbox" name="generate" id="generate" onClick="javascript:password_field()">
 <xsl:if test="user/generate='on'"><xsl:attribute name="checked">checked</xsl:attribute></xsl:if>
@@ -82,8 +85,12 @@
 <input type="password" id="password" name="password" class="form-control">
 <xsl:if test="user/generate='on'"><xsl:attribute name="disabled">disabled</xsl:attribute></xsl:if>
 </input>
+</div>
+<div class="form-group">
 <label for="email">E-mail address:</label>
 <input type="text" id="email" name="email" value="{user/email}" class="form-control" />
+</div>
+<div class="form-group">
 <label for="status">Account status:</label>
 <select id="status" name="status" class="form-control">
 <xsl:if test="user/@id=/output/user/@id">
@@ -98,9 +105,13 @@
 </option>
 </xsl:for-each>
 </select>
+</div>
+<div class="form-group">
 <label for="fullname">Full name:</label>
 <input type="text" id="fullname" name="fullname" value="{user/fullname}" class="form-control" />
+</div>
 <xsl:if test="organisations">
+<div class="form-group">
 <label for="organisation">Organisation:</label>
 <select id="organisation" name="organisation_id" class="form-control">
 <xsl:for-each select="organisations/organisation">
@@ -112,16 +123,18 @@
 </option>
 </xsl:for-each>
 </select>
+</div>
 </xsl:if>
 <xsl:if test="@authenticator='yes'">
+<div class="form-group">
 <label for="secret">Authenticator secret:</label> [<span class="info" onClick="javascript:$('#as_dialog').dialog()">?</span>]
 <div class="input-group">
 	<input type="text" id="secret" name="authenticator_secret" value="{user/authenticator_secret}" class="form-control" style="text-transform:uppercase" />
 	<span class="input-group-btn"><input type="button" value="Generate" class="btn btn-default" onClick="javascript:set_authenticator_code()" /></span>
 </div>
+</div>
 </xsl:if>
-<!--<label for="cert_serial">Certificate serial:</label>
-<input type="text" id="cert_serial" name="cert_serial" value="{user/cert_serial}" class="form-control" />-->
+<div class="form-group">
 <label for="roles">Roles:</label>
 <xsl:for-each select="roles/role">
 <div><input type="checkbox" name="roles[{@id}]" value="{@id}" class="role">
@@ -137,6 +150,7 @@
 </xsl:if>
 </div>
 </xsl:for-each>
+</div>
 
 <div class="btn-group">
 <input type="submit" name="submit_button" value="Save user" class="btn btn-default" />

@@ -33,7 +33,7 @@
 </style>
 </xsl:if>
 <xsl:for-each select="javascripts/javascript">
-<script type="text/javascript" src="{.}"></script><xsl:text>
+<script type="{@type}" src="{.}"></script><xsl:text>
 </xsl:text></xsl:for-each>
 </head>
 

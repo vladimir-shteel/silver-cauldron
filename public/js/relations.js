@@ -13,7 +13,7 @@ var ctrl_down = false;
 var entity_half_width = null;
 var entity_half_height = null;
 
-var line_type = [[], [8, 6], [3, 4]];
+var line_type = [ [], [8, 6], [3, 4] ];
 
 function show_info_window(title, description, url) {
 	var wf_info = $('<div class="description">' + description + '</div>').windowframe({

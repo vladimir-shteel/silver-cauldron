@@ -6,7 +6,7 @@ div.context_menu {
 	min-width:200px;
 	font-size:14px;
 	font-family:sans-serif;
-	max-height:500px;
+	max-height:600px;
 	overflow:auto;
 }
 

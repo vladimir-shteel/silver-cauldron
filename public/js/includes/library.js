@@ -32,6 +32,10 @@ String.prototype.explode = function(separator, limit) {
 	return array;
 };
 
+function object_last_item(obj) {
+	return obj[Object.keys(obj)[Object.keys(obj).length - 1]];
+};
+
 /* Dialogs windows
  */
 function cauldron_alert(message, title = 'Cauldron alert', callback_close = undefined) {

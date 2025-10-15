@@ -6,6 +6,10 @@ div.input-group {
 	max-width:500px;
 }
 
+div.btn-group {
+	margin-bottom:25px;
+}
+
 span.info {
 	cursor:pointer;
 	color:#ff8000;

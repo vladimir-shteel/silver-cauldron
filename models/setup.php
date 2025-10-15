@@ -411,7 +411,8 @@
 				$this->db_query("ALTER TABLE organisations ADD resources_key VARCHAR(32) NOT NULL AFTER name");
 				$this->db_query("ALTER TABLE tokens ADD organisation_id INT UNSIGNED NOT NULL AFTER id");
 				$this->db_query("UPDATE tokens SET organisation_id=%s", 1);
-				$this->db_query("ALTER TABLE tokens ADD FOREIGN KEY (organisation_id) REFERENCES organisations(id) ON DELETE RESTRICT ON UPDATE RESTRICT");
+				$this->db_query("ALTER TABLE tokens ADD FOREIGN KEY (organisation_id) REFERENCES organisations(id) ".
+				                "ON DELETE RESTRICT ON UPDATE RESTRICT");
 
 				$resources_key = random_string(32);
 				$this->db_query("UPDATE organisations SET resources_key=%s", $resources_key);
@@ -451,7 +452,7 @@
 				                "ADD shape_change BOOLEAN NOT NULL AFTER hitpoints");
 				$this->db_query("ALTER TABLE zones ADD altitude TINYINT NOT NULL AFTER %S", "group");
 
-				$this->db_query("DELETE FROM menu");
+				$this->db_query("TRUNCATE TABLE menu");
 				$this->db_query("INSERT INTO menu VALUES (%d,%d,%s,%s),(%d,%d,%s,%s),(%d,%d,%s,%s),(%d,%d,%s,%s),".
 				                "(%d,%d,%s,%s),(%d,%d,%s,%s),(%d,%d,%s,%s),(%d,%d,%s,%s)",
 				                1, 0, 'Public', 'public', 2, 1, 'Welcome', '/', 5, 0, 'Private', 'private',
@@ -662,6 +663,41 @@
 				$this->settings->database_version = 3.8;
 			}
 
+			if ($this->settings->database_version === 3.8) {
+				$this->db_query("CREATE TABLE rule_systems (id int(10) unsigned NOT NULL AUTO_INCREMENT, ".
+				                "name varchar(50) NOT NULL, code varchar(15) NOT NULL, visible TINYINT UNSIGNED NOT NULL, ".
+				                "PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+				$this->db_query("INSERT INTO rule_systems (id, name, code, visible) VALUES (NULL, %s, %s, 1), ".
+				                "(NULL, %s, %s, 1), (NULL, %s, %s, 1), (NULL, %s, %s, 1)",
+				                "Basic", "basic", "Dungeons & Dragons 5e", "dnd5", "Pathfinder 2e", "pathfinder2",
+				                "Daggerheart", "daggerheart", "Cyberpunk Red", "cyberpunkred");
+
+				$this->db_query("ALTER TABLE characters ADD rule_system_id INT UNSIGNED NOT NULL AFTER user_id");
+				$this->db_query("UPDATE characters SET rule_system_id=%d", 2);
+				$this->db_query("ALTER TABLE characters ADD FOREIGN KEY (rule_system_id) REFERENCES rule_systems(id) ".
+				                "ON DELETE RESTRICT ON UPDATE RESTRICT");
+				$this->db_query("ALTER TABLE characters CHANGE initiative initiative SMALLINT(6) NULL, ".
+				                "CHANGE armor_class armor_class TINYINT(3) UNSIGNED NULL, ".
+				                "CHANGE hitpoints hitpoints SMALLINT(5) UNSIGNED NULL");
+				$this->db_query("ALTER TABLE characters ADD custom0 SMALLINT NULL AFTER damage, ".
+				                "ADD custom1 SMALLINT NULL AFTER custom0, ADD custom2 SMALLINT NULL AFTER custom1");
+
+				$this->db_query("ALTER TABLE adventures ADD rule_system_id INT UNSIGNED NOT NULL AFTER id");
+				$this->db_query("UPDATE adventures SET rule_system_id=%d", 2);
+				$this->db_query("ALTER TABLE adventures ADD FOREIGN KEY (rule_system_id) ".
+				                "REFERENCES rule_systems(id) ON DELETE RESTRICT ON UPDATE RESTRICT");
+
+				$this->db_query("ALTER TABLE adventures ADD custom0 INT NULL AFTER notes");
+
+				$this->db_query("ALTER TABLE map_token ADD custom0 INT NOT NULL AFTER damage, ".
+				                "ADD custom1 INT NOT NULL AFTER custom0");
+
+				$this->db_query("ALTER TABLE roles ADD rs TINYINT(1) NOT NULL");
+				$this->db_query("UPDATE roles SET rs=%d WHERE id=%d or name=%s", 1, 1, "Dungeon Master");
+
+				$this->settings->database_version = 4.0;
+			}
+
 			return true;
 		}
 
@@ -681,6 +717,8 @@
 				$this->view->add_message("Error while connecting to the database.");
 				return false;
 			}
+
+			mysqli_query($db_link, "SET FOREIGN_KEY_CHECKS=0");
 
 			foreach ($tables as $table) {
 				mysqli_query($db_link, "delete from `".$table."`");
@@ -719,6 +757,8 @@
 					return false;
 				}
 			}
+
+			mysqli_query($db_link, "SET FOREIGN_KEY_CHECKS=1");
 
 			mysqli_close($db_link);
 		}

@@ -88,6 +88,10 @@ var sources = {
 };
 
 function create_monster_list(monsters) {
+	var monster_list = $('div.monsters');
+
+	monster_list.append('<label>Dungeons &amp; Dragons 5e monsters:</label>');
+
 	monsters.forEach(function(monster) {
 		var record = '<div class="well" name="' + monster.name.toLowerCase() + '" hp="' + monster.hp + '" ac="' + monster.ac + '" size="' + monster.size + '">'
 		record += '<div>' + monster.name + '</div>'
@@ -99,7 +103,7 @@ function create_monster_list(monsters) {
 		record += '</div>'
 		record += '</div>'
 
-		$('div.monsters').append(record)
+		monster_list.append(record)
 	});
 
 	/* Filter monster list

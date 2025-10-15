@@ -37,6 +37,8 @@
 				$invite["characters"] = array();
 			}
 
+			$this->view->add_javascript("vault/players.js");
+
 			$this->view->open_tag("edit");
 
 			$this->view->record($adventure, "adventure");

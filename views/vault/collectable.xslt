@@ -52,19 +52,27 @@
 <img src="/resources/{/output/cauldron/resources_key}/collectables/{collectable/image}" class="collectable" />
 </xsl:if>
 
+<div class="form-group">
 <label for="name">Name:</label>
 <input type="text" id="name" name="name" value="{collectable/name}" maxlength="50" placeholder="A reference for you as the Dungeon Master." class="form-control" />
+</div>
+<div class="form-group">
 <label for="description">Description:</label>
 <textarea id="description" name="description" placeholder="To be shown to the players." class="form-control"><xsl:value-of select="collectable/description" /></textarea>
+</div>
+<div class="form-group">
 <label for="image">Image:</label>
 <div class="input-group">
 <span class="input-group-btn"><label class="btn btn-default">
 <input type="file" name="image" style="display:none" class="form-control" onChange="$('#upload-file-info').val(this.files[0].name)" />Browse</label></span>
 <input type="text" id="upload-file-info" readonly="readonly" class="form-control" />
 </div>
+</div>
 <xsl:if test="collectable/location!=''">
+<div class="form-group">
 <label>Location:</label>
 <input readonly="readonly" value="{collectable/location}" class="form-control" />
+</div>
 </xsl:if>
 <div class="option"><input type="checkbox" name="found"><xsl:if test="collectable/found='yes'"><xsl:attribute name="checked">checked</xsl:attribute></xsl:if></input>Collectable has been found (visible in inventory).</div>
 <div class="option"><input type="checkbox" name="hide"><xsl:if test="collectable/hide='yes'"><xsl:attribute name="checked">checked</xsl:attribute></xsl:if></input>Hide the containing token when the collectable is found.</div>

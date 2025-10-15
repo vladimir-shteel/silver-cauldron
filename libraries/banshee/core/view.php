@@ -241,7 +241,7 @@
 		 * OUTPUT: -
 		 * ERROR:  -
 		 */
-		public function add_javascript($script) {
+		public function add_javascript($script, $type = "text/javascript") {
 			if ((substr($script, 0, 7) != "http://") && (substr($script, 0, 8) != "https://")) {
 				if (file_exists("js/".$script) == false) {
 					if (is_true(DEBUG_MODE)) {
@@ -254,7 +254,9 @@
 			}
 
 			if (in_array($script, $this->javascripts) == false) {
-				array_push($this->javascripts, $script);
+				array_push($this->javascripts, array(
+					"type" => $type,
+					"url"  => $script));
 			}
 
 			return true;
@@ -464,7 +466,8 @@
 				}
 				$this->open_tag("javascripts", $params);
 				foreach ($this->javascripts as $javascript) {
-					$this->add_tag("javascript", $javascript);
+					$this->add_tag("javascript", $javascript["url"], array(
+						"type" => $javascript["type"]));
 				}
 				$this->close_tag();
 
@@ -473,8 +476,8 @@
 				$this->open_tag("alternates");
 				foreach ($this->alternates as $alternate) {
 					$this->add_tag("alternate", $alternate["title"], array(
-						"type"  => $alternate["type"],
-						"url" => $alternate["url"]));
+						"type" => $alternate["type"],
+						"url"  => $alternate["url"]));
 				}
 				$this->close_tag();
 
@@ -580,12 +583,14 @@
 		 */
 		public function generate() {
 			if ($this->disabled) {
-				return;
+				return "";
 			}
 
 			if ((headers_sent() == false) && ($this->page->http_code != 200)) {
 				header(sprintf("Status: %d", $this->page->http_code));
 			}
+
+			$result = "";
 
 			switch ($this->mode) {
 				case "json":

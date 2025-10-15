@@ -80,11 +80,6 @@
 				return;
 			}
 
-			if (($conditions = $this->model->get_conditions()) === false) {
-				$this->view->add_tag("result", "Database error.");
-				return;
-			}
-
 			if (($doors = $this->model->get_doors($adventure["active_map_id"])) === false) {
 				$this->view->add_tag("result", "Database error.");
 				return;
@@ -261,14 +256,6 @@
 						$character["src"] = $character["orig_src"];
 					}
 					$this->view->record($character, "character");
-				}
-				$this->view->close_tag();
-
-				/* Conditions
-				 */
-				$this->view->open_tag("conditions");
-				foreach ($conditions as $condition) {
-					$this->view->add_tag("condition", $condition["name"], array("id" => $condition["id"]));
 				}
 				$this->view->close_tag();
 

@@ -4,16 +4,17 @@ const DICE_ROLL_DISADVANTAGE = 2;
 
 var wf_dice_roll = null;
 var custom_dice = [];
+var custom_rolls = [];
 
-function dice_roll(dice, addition, callback) {
+function dice_roll(dice, callback) {
 	if ((localStorage.getItem('dice_type') == 'animated') && (typeof dice_roll_3d == 'function')) {
-		return dice_roll_3d(dice, addition, callback);
+		return dice_roll_3d(dice, callback);
 	} else {
-		return dice_roll_quick(dice, addition, callback);
+		return dice_roll_quick(dice, callback);
 	}
 }
 
-function dice_roll_quick(dice, addition, callback) {
+function dice_roll_quick(dice, callback) {
 	var result = [];
 
 	for (i = 0; i < dice.length; i++) {
@@ -28,17 +29,12 @@ function dice_roll_quick(dice, addition, callback) {
 		}
 	}
 
-	callback(result, addition);
+	callback(result);
 
 	return true;
 }
 
-function roll_dice(dice_input, send_to_others = true) {
-	if (dice == '') {
-		wf_dice_roll.open();
-		return true;
-	}
-
+function dice_roll_parse_string(dice_input) {
 	if (dice_input.indexOf('d') == -1) {
 		return false;
 	}
@@ -100,7 +96,19 @@ function roll_dice(dice_input, send_to_others = true) {
 		}
 	}
 
-	dice_roll(dice, addition, function(result, addition) {
+	return [ dice, addition ];
+}
+
+function roll_dice(dice_input, send_to_others = true) {
+	var result = dice_roll_parse_string(dice_input);
+
+	if (result == false) {
+		return false;
+	}
+
+	var [ dice, addition ] = result;
+
+	dice_roll(dice, function(result) {
 		var message = 'Dice roll: ' + dice_input + '\n';
 		var total = addition;
 
@@ -143,7 +151,7 @@ function roll_d20(bonus, type = DICE_ROLL_NORMAL) {
 		dice.push('1d20');
 	}
 
-	dice_roll(dice, bonus, function(result, bonus) {
+	dice_roll(dice, function(result) {
 		var roll = result[0];
 
 		switch (type) {
@@ -210,7 +218,22 @@ function roll_d20(bonus, type = DICE_ROLL_NORMAL) {
 	return true;
 }
 
-$(document).ready(function() {
+function dice_roll_window_open() {
+	wf_dice_roll.open();
+}
+
+function dice_roll_window_close() {
+	wf_dice_roll.close();
+}
+
+function dice_roll_add_custom(label, callback) {
+	custom_rolls.push({
+		label: label,
+		callback: callback
+	});
+}
+
+function dice_roll_initialize(support_crit_rolls = true) {
 	/* Dice roll window
 	 */
 	var dice_window = '<div><div class="dicerolls_defined"></div><div class="diceroll">';
@@ -225,7 +248,7 @@ $(document).ready(function() {
 	dice_window += '<div class="dice"><img src="/images/plus.png" /><input type="text" class="form-control" /></div>'
 	dice_window += '</div>';
 
-	dice_roll_get = function() {
+	var dice_roll_get = function() {
 		var roll = '';
 		$('div.diceroll select').each(function() {
 			var value = parseInt($(this).val());
@@ -257,7 +280,7 @@ $(document).ready(function() {
 		return roll;
 	}
 
-	dice_roll_init = function() {
+	var dice_roll_build = function() {
 		$('div.diceroll select').each(function() {
 			$(this).val('0');
 		});
@@ -265,6 +288,20 @@ $(document).ready(function() {
 
 		var defined = $('div.dicerolls_defined');
 		defined.empty();
+
+		/* Custom rolls
+		 */
+		custom_rolls.forEach(function(roll) {
+			var button = $('<div class="btn-group"><button class="btn btn-success">' + roll.label + '</button></div>');	
+			button.on('click', function() {
+				wf_dice_roll.close();
+				roll.callback();
+			});
+			defined.append(button);
+		});
+
+		/* Saved rolls
+		 */
 		var rolls = localStorage.getItem('dicerolls');
 		if (rolls == undefined) {
 			rolls = [];
@@ -326,6 +363,7 @@ $(document).ready(function() {
 
 				roll_dice(roll, dungeon_master == false);
 			});
+
 			button.find('input.remove').on('click', function() {
 				if (confirm('Delete dice?')) {
 					var key = $(this).parent().find('input.roll').attr('value');
@@ -334,49 +372,60 @@ $(document).ready(function() {
 					delete rolls[key];
 					localStorage.setItem('dicerolls', JSON.stringify(rolls));
 
-					dice_roll_init();
+					dice_roll_build();
 				}
 			});
+
 			defined.append(button);
 		};
 	}
 
-	var dice_roll_key_down = function(event) {
-		if (event.which != 17) {
-			return;
-		}
+	if (support_crit_rolls) {
+		var dice_roll_key_down = function(event) {
+			if (event.which != KEY_CTRL) {
+				return;
+			}
 
-		wf_dice_roll.find('div.dicerolls_defined input.btn-default').addClass('btn-d');
-		wf_dice_roll.find('div.dicerolls_defined input.btn-primary').addClass('btn-p');
-		wf_dice_roll.find('div.dicerolls_defined input.btn-default').removeClass('btn-default');
-		wf_dice_roll.find('div.dicerolls_defined input.btn-primary').removeClass('btn-primary');
-		wf_dice_roll.find('div.dicerolls_defined input.btn').addClass('btn-danger');
-	};
+			wf_dice_roll.find('div.dicerolls_defined input.btn-default').addClass('btn-d');
+			wf_dice_roll.find('div.dicerolls_defined input.btn-primary').addClass('btn-p');
+			wf_dice_roll.find('div.dicerolls_defined input.btn-default').removeClass('btn-default');
+			wf_dice_roll.find('div.dicerolls_defined input.btn-primary').removeClass('btn-primary');
+			wf_dice_roll.find('div.dicerolls_defined input.btn').addClass('btn-danger');
+		};
 
-	var dice_roll_key_up = function(event) {
-		if (event.which != 17) {
-			return;
-		}
+		var dice_roll_key_up = function(event) {
+			if (event.which != KEY_CTRL) {
+				return;
+			}
 
-		wf_dice_roll.find('div.dicerolls_defined input.btn').removeClass('btn-danger');
-		wf_dice_roll.find('div.dicerolls_defined input.btn-d').addClass('btn-default');
-		wf_dice_roll.find('div.dicerolls_defined input.btn-p').addClass('btn-primary');
-	};
+			wf_dice_roll.find('div.dicerolls_defined input.btn').removeClass('btn-danger');
+			wf_dice_roll.find('div.dicerolls_defined input.btn-d').addClass('btn-default');
+			wf_dice_roll.find('div.dicerolls_defined input.btn-p').addClass('btn-primary');
+		};
+
+		var crit_info = '<p>Hold the CTRL key to double the dice for your saved dice selections and weapons. Use this to perform a critical damage roll.</p>';
+	} else {
+		var crit_info = '';
+	}
 
 	wf_dice_roll = $(dice_window).windowframe({
 		activator: 'button.show_dice',
 		header: 'Dice roll',
-		info: '<p>Use this tool to roll dice. The option \'animated\' rolls a 3D dice on the screen and shows the result in the sidebar. The option \'quick\' only shows the roll results in the sidebar.</p><p>Use the Save button to save a dice selection. They appear at the top of the dice roll window. The blue buttons represent the weapons you added to your character in the <a href="/character">Characters</a> page.</p><p>Hold the CTRL key to double the dice for your saved dice selections and weapons. Use this to perform a critical damage roll.</p>',
+		info: '<p>Use this tool to roll dice. The option \'animated\' rolls a 3D dice on the screen and shows the result in the sidebar. The option \'quick\' only shows the roll results in the sidebar.</p><p>Use the Save button to save a dice selection. They appear at the top of the dice roll window. The blue buttons represent the weapons you added to your character in the <a href="/character">Characters</a> page.</p>' + crit_info,
 		width: 650,
 		open: function() {
-			dice_roll_init();
+			dice_roll_build();
 
-			$('body').on('keydown', dice_roll_key_down);
-			$('body').on('keyup', dice_roll_key_up);
+			if (support_crit_rolls) {
+				$('body').on('keydown', dice_roll_key_down);
+				$('body').on('keyup', dice_roll_key_up);
+			}
 		},
 		close: function() {
-			$('body').off('keydown', dice_roll_key_down);
-			$('body').off('keyup', dice_roll_key_up);
+			if (support_crit_rolls) {
+				$('body').off('keydown', dice_roll_key_down);
+				$('body').off('keyup', dice_roll_key_up);
+			}
 		},
 		buttons: {
 			'Roll': function() {
@@ -414,7 +463,7 @@ $(document).ready(function() {
 
 				localStorage.setItem('dicerolls', JSON.stringify(rolls));
 
-				dice_roll_init();
+				dice_roll_build();
 			}
 		}
 	});
@@ -477,7 +526,7 @@ $(document).ready(function() {
 
 			var text = dice[side];
 
-			var message = 'Custom dice roll.\n' + name + '\n-&gt; ' + text;
+			var message = 'Rolling ' + name + '\nResult: [' + text + ']';
 			if (dungeon_master == false) {
 				send_message(message, my_name);
 			} else {
@@ -487,4 +536,4 @@ $(document).ready(function() {
 
 		wf_dice_roll.parent().find('div.btn-group').before(custom_dice_selector);
 	}
-});
+}

@@ -557,24 +557,6 @@ function battle_done() {
 
 /* Condition functions
  */
-function save_condition(obj, condition) {
-	var conditions = localStorage.getItem('conditions');
-	if (conditions == undefined) {
-		conditions = {};
-	} else {
-		conditions = JSON.parse(conditions);
-	}
-
-	var key = obj.prop('id');
-	if (condition != '') {
-		conditions[key] = condition;
-	} else {
-		delete conditions[key];
-	}
-
-	localStorage.setItem('conditions', JSON.stringify(conditions));
-}
-
 function set_condition(obj, condition) {
 	obj.find('span.conditions').remove();
 
@@ -695,7 +677,6 @@ $(document).ready(function() {
 			case 'condition':
 				var obj = $('div#' + data.object_id);
 				set_condition(obj, data.condition);
-				save_condition(obj, data.condition);
 				break;
 			case 'create':
 				var obj = '<div id="token' + data.instance_id + '" token_id="' + data.token_id +'" class="token" style="left:' + data.pos_x + 'px; top:' + data.pos_y + 'px; z-index:' + DEFAULT_Z_INDEX + '" type="' + data.type + '" is_hidden="no" rotation="0" armor_class="' + data.armor_class + '" hitpoints="' + data.hitpoints + '" damage="0" name="">' +
@@ -994,14 +975,6 @@ $(document).ready(function() {
 	$('select.map-selector').on('click', function(event) {
 		event.stopPropagation();
 	});
-
-	var conditions = localStorage.getItem('conditions');
-	if (conditions != undefined) {
-		conditions = JSON.parse(conditions);
-		for (var [key, value] of Object.entries(conditions)) {
-			set_condition($('div#' + key), value);
-		}
-	}
 
 	var audio_file = $('div.playarea').attr('audio');
 	if (audio_file != undefined) {

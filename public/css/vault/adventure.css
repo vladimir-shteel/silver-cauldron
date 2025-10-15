@@ -3,7 +3,7 @@ table.table th:first-child {
 }
 
 table.table th:nth-child(3) {
-	width:80px;
+	width:200px;
 }
 
 table.table th:nth-child(4) {
@@ -11,6 +11,10 @@ table.table th:nth-child(4) {
 }
 
 table.table th:nth-child(5) {
+	width:80px;
+}
+
+table.table th:nth-child(6) {
 	width:100px;
 }
 
@@ -50,6 +54,18 @@ div.panel div.panel-footer span:last-of-type:after {
 @media (max-width:767px) {
 	div.panel div.panel-footer form {
 		text-align:right;
+	}
+
+	table.table th:nth-child(3),
+	table.table td:nth-child(3) {
+		display:none;
+	}
+}
+
+@media (max-width:550px) {
+	table.table th:nth-child(4),
+	table.table td:nth-child(4) {
+		display:none;
 	}
 }
 

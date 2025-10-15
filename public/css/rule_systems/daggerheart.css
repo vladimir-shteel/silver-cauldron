@@ -1,0 +1,8 @@
+div.hope,
+div.fear {
+	display:inline-block;
+	margin-right:15px;
+	position:relative;
+	top:2px;
+	font-weight:bold;
+}

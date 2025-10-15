@@ -183,6 +183,24 @@
 			}
 		}
 
+		public function post_adventure_custom_value() {
+			$this->model->adventure_custom_value($_POST["adventure_id"], $_POST["key"], $_POST["value"]);
+		}
+
+		public function post_character_custom_value() {
+			if (substr($_POST["instance_id"], 0, 9) == "character") {
+				$instance_id = substr($_POST["instance_id"], 9);
+				$this->model->character_custom_value($instance_id, $_POST["key"], $_POST["value"]);
+			}
+		}
+
+		public function post_token_custom_value() {
+			if (substr($_POST["instance_id"], 0, 5) == "token") {
+				$instance_id = substr($_POST["instance_id"], 5);
+				$this->model->token_custom_value($instance_id, $_POST["key"], $_POST["value"]);
+			}
+		}
+
 		/* Collectables
 		 */
 		public function post_collectables_unused() {

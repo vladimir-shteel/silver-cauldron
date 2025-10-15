@@ -1,8 +1,10 @@
 <?php
 	class relations_model extends cauldron_model {
 		private function valid_adventure_id($adventure_id) {	
-			$query = "select count(*) as count from adventures a, adventure_character l, characters c ".
-			         "where a.id=l.adventure_id and l.character_id=c.id and (a.dm_id=%d or c.user_id=%d)";
+			$query = "select count(*) AS count from adventures a ".
+			         "left join adventure_character l ON l.adventure_id=a.id ".
+			         "left join characters c ON c.id=l.character_id ".
+			         "where a.dm_id=%d OR c.user_id=%d";
 
 			if (($result = $this->db->execute($query, $this->user->id, $this->user->id)) == false) {
 				return false;

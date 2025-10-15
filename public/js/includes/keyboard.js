@@ -2,6 +2,17 @@ const KB_QWERTY = 0;
 const KB_AZERTY = 1;
 const KB_QWERTZ = 2;
 
+var KEY_TAB = 9;
+var KEY_SHIFT = 16;
+var KEY_CTRL = 17;
+var KEY_ALT = 18;
+var KEY_PAUSE_BREAK = 19;
+var KEY_ESC = 27;
+var KEY_TILDE = 192;
+
+var KEY_F = 70;
+var KEY_P = 80;
+
 var KB_MOVE_UP;
 var KB_MOVE_LEFT;
 var KB_MOVE_DOWN;

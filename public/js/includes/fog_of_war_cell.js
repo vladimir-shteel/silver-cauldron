@@ -302,7 +302,7 @@ function fog_of_war_set_distance(distance) {
 }
 
 function fog_of_war_update(obj) {
-	if (fog_of_war_spot_max == null) {
+	if (fog_of_war_spot_max === null) {
 		return;
 	}
 

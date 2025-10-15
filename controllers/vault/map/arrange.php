@@ -1,5 +1,5 @@
 <?php
-	class vault_map_arrange_controller extends Banshee\controller {
+	class vault_map_arrange_controller extends cauldron_controller {
 		protected $prevent_repost = false;
 
 		private function arrange_map($map_id) {
@@ -15,6 +15,11 @@
 
 			if (($adventure = $this->model->get_adventure($map["adventure_id"])) === false) {
 				$this->view->add_tag("result", "Database error.", array("url" => "vault/map"));
+				return;
+			}
+
+			if ($this->model->load_rule_system($adventure["rule_system_id"]) == false) {
+				$this->view->add_tag("result", "Invalid rule system.");
 				return;
 			}
 
@@ -77,6 +82,9 @@
 			if (is_true($map["show_grid"])) {
 				$this->view->add_javascript("includes/grid.js");
 			}
+
+			$this->model->rule_system->start_map_arrange();
+
 			$this->view->add_javascript("vault/map/arrange.js");
 
 			if (($map["fog_of_war"] == FOW_DAY_REAL) || ($map["fog_of_war"] == FOW_NIGHT_REAL)) {
@@ -97,6 +105,12 @@
 				"resources_key"  => $this->user->resources_key,
 				"grid_cell_size" => $grid_cell_size);
 			$this->view->open_tag("adventure", $attr);
+
+			for ($i = 0; $i < ADVENTURE_CUSTOM_OPTIONS; $i++) {
+				$this->view->add_tag("custom", $adventure["custom".$i]);
+				unset($adventure["custom".$i]);
+			}
+
 			$this->view->record($adventure);
 
 			$map["url"] = $this->model->resource_path($map["url"]);
@@ -191,7 +205,17 @@
 				$token["height"] *= $grid_cell_size;
 				$token["hidden"] = show_boolean($token["hidden"]);
 				$token["known"] = show_boolean($token["known"]);
-				$this->view->record($token, "token");
+
+				$this->view->open_tag("token", array("id" => $token["id"]));
+
+				for ($i = 0; $i < TOKEN_CUSTOM_OPTIONS; $i++) {
+					$this->view->add_tag("custom", $token["custom".$i]);
+					unset($token["custom".$i]);
+				}
+
+				$this->view->record($token);
+
+				$this->view->close_tag();
 			}
 			$this->view->close_tag();
 

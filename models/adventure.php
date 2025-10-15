@@ -53,6 +53,10 @@
 			return $adventures[0];
 		}
 
+		public function get_rule_system($rule_system_id) {
+			return $this->db->entry("rule_systems", $rule_system_id);
+		}
+
 		public function get_maps($adventure_id) {
 			$query = "select id, title from maps where adventure_id=%d order by title";
 
@@ -266,8 +270,13 @@
 		}
 
 		public function get_tokens($map_id) {
+			$custom = "";
+			for ($i = 0; $i < TOKEN_CUSTOM_OPTIONS; $i++) {
+				$custom .= "i.custom".$i.", ";
+			}
+
 			$query = "select t.id, t.name as type, t.width, t.height, t.extension, t.type as token_type, ".
-			         "c.id as c_id, c.name as c_name, c.image as c_src, hide as c_hide, found as c_found, ".
+			         "c.id as c_id, c.name as c_name, c.image as c_src, hide as c_hide, found as c_found, ".$custom.
 			         "i.id as instance_id, i.name, i.known, i.pos_x, i.pos_y, i.rotation, i.hidden, i.armor_class, i.hitpoints, i.damage ".
 			         "from tokens t, map_token i ".
 					 "left join collectables c on c.map_token_id=i.id ".
