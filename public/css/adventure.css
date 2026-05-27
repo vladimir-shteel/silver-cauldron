@@ -119,6 +119,59 @@ div.topbar div.btn-group {
 	display:inline-block;
 }
 
+div.topbar div.btn-group.dice-quick {
+	margin-right:6px;
+}
+
+div.topbar div.btn-group.dice-quick button {
+	min-width:28px;
+	font-weight:bold;
+}
+
+div.topbar div.btn-group.dice-controls {
+	margin-right:6px;
+	display:inline-flex;
+	align-items:center;
+	vertical-align:middle;
+}
+
+div.topbar div.btn-group.dice-controls button {
+	padding:1px 5px;
+}
+
+input.dice-quick-ctrl {
+	display:inline-block;
+	width:32px;
+	height:22px;
+	padding:1px 2px;
+	font-size:11px;
+	line-height:1.4;
+	text-align:center;
+	border:1px solid #ccc;
+	border-radius:3px;
+	vertical-align:middle;
+	-moz-appearance:textfield;
+}
+
+input.dice-quick-ctrl::-webkit-outer-spin-button,
+input.dice-quick-ctrl::-webkit-inner-spin-button {
+	-webkit-appearance:none;
+	margin:0;
+}
+
+input.dice-quick-mod {
+	width:38px;
+}
+
+span.dice-ctrl-sep {
+	display:inline-block;
+	padding:0 2px;
+	font-size:13px;
+	font-weight:bold;
+	vertical-align:middle;
+	color:#555;
+}
+
 div.topbar select.map-selector {
 	display:block;
 	width:100%;
@@ -450,13 +503,13 @@ div.playarea {
 	position:absolute;
 	top:40px;
 	right:215px;
-	bottom:15px;
-	left:15px;
-	border:1px solid #000000;
-	overflow:auto;
+	bottom:0;
+	left:0;
+	border:none;
+	overflow:hidden;
 	z-index:1;
 	transform-origin:top left;
-	background-color:#ffffff;
+	background-color:#4a4a4a;
 }
 
 div.playarea > div {
@@ -898,6 +951,16 @@ div.dark div.playarea {
 
 div.dark div.topbar {
 	color:#e0e0e0;
+}
+
+div.dark input.dice-quick-ctrl {
+	background-color:#303030;
+	border-color:#555;
+	color:#e0e0e0;
+}
+
+div.dark span.dice-ctrl-sep {
+	color:#aaa;
 }
 
 div.dark div.sidebar a {

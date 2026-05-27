@@ -88,7 +88,7 @@
 
 		/* Unsecured connection
 		 */
-		if (($_SERVER["HTTPS"] != "on") && ($_SERVER["HTTP_SCHEME"] != "https")) {
+		if ((($_SERVER["HTTPS"] ?? "") != "on") && ($_SERVER["HTTP_SCHEME"] != "https")) {
 			$pages = array(LOGIN_MODULE, "register", "password");
 			if (in_array($_page->module, $pages) || (substr($_page->module, 0, 5) == "vault")) {
 				$_view->add_system_warning("Warning, the connection you are using is not secure!");

@@ -6,9 +6,20 @@ var wf_dice_roll = null;
 var custom_dice = [];
 var custom_rolls = [];
 
-function dice_roll(dice, callback) {
+function dice_roll(dice, callback, send_to_others = false, share_anim = undefined) {
+	/* share_anim: true  = always broadcast animation (even if result is private)
+	 *             false = never broadcast animation
+	 *             undefined = follow send_to_others
+	 */
+	var should_anim = (share_anim !== undefined) ? share_anim : send_to_others;
+
 	if ((localStorage.getItem('dice_type') == 'animated') && (typeof dice_roll_3d == 'function')) {
-		return dice_roll_3d(dice, callback);
+		var seed = Math.floor(Math.random() * 0xFFFFFFFF);
+		var success = dice_roll_3d(dice, callback, seed);
+		if (success && should_anim && (typeof websocket_send == 'function')) {
+			websocket_send({ action: 'dice_animate', dice: dice, seed: seed });
+		}
+		return success;
 	} else {
 		return dice_roll_quick(dice, callback);
 	}
@@ -129,7 +140,7 @@ function roll_dice(dice_input, send_to_others = true) {
 		} else {
 			write_sidebar(message);
 		}
-	});
+	}, send_to_others);
 
 	return true;
 }
@@ -213,7 +224,7 @@ function roll_d20(bonus, type = DICE_ROLL_NORMAL) {
 		} else {
 			write_sidebar(message);
 		}
-	});
+	}, dungeon_master == false);
 
 	return true;
 }

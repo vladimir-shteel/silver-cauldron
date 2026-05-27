@@ -88,6 +88,29 @@ Create a character if you haven't yet done so. To create a new character, click 
 <div class="topbar">
 <xsl:if test="map">
 <div class="btn-group">
+<button id="dice-quick-toggle" class="btn btn-success btn-xs" onclick="dice_quick_toggle()" title="Toggle public/hidden roll">&#x1F513; Open</button>
+</div>
+<div class="btn-group dice-controls">
+<button class="btn btn-default btn-xs" onclick="dice_quick_count(-1)">&#8722;</button>
+<input type="number" id="dice-quick-count" class="dice-quick-ctrl" value="1" min="1" max="20" title="Number of dice" />
+<button class="btn btn-default btn-xs" onclick="dice_quick_count(1)">+</button>
+</div>
+<div class="btn-group dice-quick">
+<button class="btn btn-default btn-xs" onclick="quick_roll(4)">d4</button>
+<button class="btn btn-default btn-xs" onclick="quick_roll(6)">d6</button>
+<button class="btn btn-default btn-xs" onclick="quick_roll(8)">d8</button>
+<button class="btn btn-default btn-xs" onclick="quick_roll(10)">d10</button>
+<button class="btn btn-default btn-xs" onclick="quick_roll(12)">d12</button>
+<button class="btn btn-default btn-xs" onclick="quick_roll(20)">d20</button>
+</div>
+<div class="btn-group dice-controls">
+<span class="dice-ctrl-sep">&#177;</span>
+<input type="number" id="dice-quick-mod" class="dice-quick-ctrl dice-quick-mod" value="" placeholder="0" title="Modifier (e.g. +3 or -1)" />
+</div>
+<div class="btn-group">
+<button class="btn btn-default btn-xs show_dice" title="Roll Dice (~)">&#x2684; Roll</button>
+</div>
+<div class="btn-group">
 <button class="btn btn-primary btn-xs open_menu">Menu</button>
 </div>
 </xsl:if>

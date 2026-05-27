@@ -1,0 +1,9 @@
+.git
+node_modules
+logfiles/*.log
+logfiles/access.log
+logfiles/actions.log
+logfiles/database.log
+logfiles/debug.log
+logfiles/error.log
+start.bat

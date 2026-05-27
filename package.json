@@ -1,0 +1,24 @@
+{
+  "name": "cauldron",
+  "version": "1.0.0",
+  "description": "Cauldron VTT\r ============",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/hsleisink/cauldron.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://gitlab.com/hsleisink/cauldron/issues"
+  },
+  "homepage": "https://gitlab.com/hsleisink/cauldron#readme",
+  "dependencies": {
+    "ws": "^8.21.0"
+  }
+}

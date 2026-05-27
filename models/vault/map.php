@@ -53,7 +53,7 @@
 					$image = substr($image, 1);
 				}
 			} else {
-				list($protocol,, $hostname, $path) = explode("/", $map["url"], 4);
+				list($protocol,, $hostname, $path) = array_pad(explode("/", $map["url"], 4), 4, "");
 				if ($protocol == "http:") {
 					$website = new \Banshee\Protocol\HTTPS($hostname);
 				} else if ($protocol == "https:") {

@@ -1,0 +1,84 @@
+#------------------------------------------------------------------------------
+#
+#  Banshee's general website settings
+#
+#------------------------------------------------------------------------------
+
+# Database settings
+#
+DB_HOSTNAME = localhost
+DB_DATABASE = cauldron
+DB_USERNAME = cauldron
+DB_PASSWORD = your_password_here
+
+# Specify what kind of files can be uploaded via the File Administration page.
+#
+ALLOWED_UPLOADS = jpg|jpeg|gif|png|ico|pdf|doc|docx|xls|xlsx|txt|rtf|odt|ods|odp|wav|mp3|cva|cvm
+
+# The format of the API communication. Use 'xml' or 'json'.
+#
+API_OUTPUT_TYPE = xml
+
+# Default lifetime of the data in the internal cache.
+#
+CACHE_TIMEOUT = 86400
+
+# Names of the days and months to be used in date_string().
+#
+DAYS_OF_WEEK = Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday
+MONTHS_OF_YEAR = January|February|March|April|May|June| \
+                 July|August|September|October|November|December
+
+# Print error message on the screen or send them via e-mail to the administrator.
+#
+DEBUG_MODE = yes
+
+# Redirect HTTP requests to HTTPS.
+#
+ENFORCE_HTTPS = no
+
+# Load extra config files from the settings directoy. Omit the .conf extension.
+#
+EXTRA_SETTINGS = cauldron
+
+# Security Headers
+#
+HEADER_CSP = frame-ancestors 'self'; default-src 'self' 'unsafe-inline' 'unsafe-eval' wss:; img-src * data:
+HEADER_FP = camera 'none'; geolocation 'none'; microphone 'none'
+
+# Hide menu for unauthorized users.
+#
+HIDE_MENU_FOR_VISITORS = no
+
+# The layout to be used for the website and the Dungeon Master's Vault.
+# Layouts can be found in view/banshee/layout_*.xslt. The corresponding
+# stylesheets are located in public/css/banshee/layout_*.css.
+#
+LAYOUT_SITE = cauldron
+
+# Log all database queries to logfiles/database.log.
+#
+LOG_DB_QUERIES = no
+
+# Only show menu items the current user can access.
+#
+MENU_PERSONALIZED = yes
+
+# If your webserver is behind a reverse proxy, specify its IP address here.
+#
+REVERSE_PROXY =
+
+# The languages you can chose from in the Page Administration page.
+#
+SUPPORTED_LANGUAGES = en:English|nl:Nederlands
+
+# This setting enables two-factor authentication. This requires the use
+# of a mobile app that implements RFC 6238, uses BASE32 characters, sha1
+# and a 30 second time interval to generate a 6 digit code.
+#
+USE_AUTHENTICATOR = no
+
+# Off line mode disables all modules and features of this website and shows a message.
+# When set to an IP-address, only computers behind that IP-address will have normal access.
+#
+WEBSITE_ONLINE = yes

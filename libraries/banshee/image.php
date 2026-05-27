@@ -40,7 +40,7 @@
 				$this->set_image_format("webp");
 				$this->load($image);
 				return;
-			} else if (substr($image, 0, 5) == "/tmp/") {
+			} else if (file_exists($image)) {
 				$image = file_get_contents($image);
 			}
 
@@ -66,9 +66,6 @@
 		 * ERROR:  -
 		 */
 		public function __destruct() {
-			if ($this->resource !== null) {
-				imagedestroy($this->resource);
-			}
 		}
 
 		/* Set image format
@@ -204,7 +201,6 @@
 				return false;
 			}
 
-			imagedestroy($this->resource);
 			$this->resource = $resource;
 			$this->update_size();
 
@@ -230,7 +226,6 @@
 				return false;
 			}
 
-			imagedestroy($this->resource);
 			$this->resource = $resource;
 			$this->update_size();
 
@@ -246,11 +241,9 @@
 		public function crop($x, $y, $width, $height) {
 			$cropped = imagecreatetruecolor($width, $height);
 			if (imagecopy($cropped, $this->resource, 0, 0, $x, $y, $width, $height) == false) {
-				imagedestroy($cropped);
 				return false;
 			}
 
-			imagedestroy($this->resource);
 			$this->resource = $cropped;
 			$this->update_size();
 

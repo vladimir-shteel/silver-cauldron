@@ -1,10 +1,8 @@
 import DiceBox from '/dice-box/dice-box.es.min.js';
 
-var hostname = $('body').attr('hostname');
-
 var Box = new DiceBox('#dice-box', {
 	assetPath: 'assets/',
-	origin: 'https://' + hostname + '/dice-box/',
+	origin: window.location.origin + '/dice-box/',
 	theme: 'smooth',
 	themeColor: '#ff4020',
 	offscreen: false,
@@ -15,6 +13,7 @@ var Box = new DiceBox('#dice-box', {
 var dicebox_busy = false;
 var dicebox_timeout = undefined;
 var dicebox_callback = undefined;
+var dicebox_ready = false;
 
 Box.onRollComplete = function(rollResult) {
 	var results = [];
@@ -39,7 +38,13 @@ Box.onRollComplete = function(rollResult) {
 	dicebox_busy = false;
 };
 
-function dice_roll_3d(dice, callback) {
+function dice_seed(seed) {
+	if (window.__dicePhysicsWorker) {
+		window.__dicePhysicsWorker.postMessage({ action: 'seed', value: seed });
+	}
+}
+
+function dice_roll_3d(dice, callback, seed) {
 	if (dicebox_busy) {
 		return false;
 	}
@@ -52,7 +57,12 @@ function dice_roll_3d(dice, callback) {
 
 	dicebox_clear_timer();
 
-	Box.roll(dice);
+	dicebox_init_promise.then(function() {
+		if (seed !== undefined) {
+			dice_seed(seed);
+		}
+		Box.roll(dice);
+	});
 
 	var audio = new Audio('/dice-box/diceroll.mp3');
 	audio.play();
@@ -77,25 +87,10 @@ function dicebox_color(color) {
 	localStorage.setItem('dice_color', color);
 }
 
-Box.init();
-
-$('div#dice-box').on('click', function() {
-	if (dicebox_busy) {
-		return;
-	}
-
-	dicebox_clear_timer();
-	dicebox_hide();
+var dicebox_init_promise = Box.init().then(function() {
+	dicebox_ready = true;
 });
 
-$('div#dice-box').on('contextmenu', function() {
-	if (dicebox_busy) {
-		return;
-	}
-
-	dicebox_clear_timer();
-	dicebox_hide();
-});
 
 $(document).ready(function() {
 	dicebox_hide();
@@ -106,7 +101,12 @@ $(document).ready(function() {
 	}
 });
 
+function dice_animate_only(dice, seed) {
+	dice_roll_3d(dice, function() {}, seed);
+}
+
 window.dice_roll_3d = dice_roll_3d;
 window.dicebox_color = dicebox_color;
+window.dice_animate_only = dice_animate_only;
 
-export { dice_roll_3d, dicebox_color };
+export { dice_roll_3d, dicebox_color, dice_animate_only };

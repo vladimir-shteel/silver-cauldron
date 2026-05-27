@@ -4,6 +4,7 @@ div#dice-box {
 	left:15px;
 	right:215px;
 	bottom:15px;
+	pointer-events: none;
 }
 
 div#dice-box canvas {

@@ -208,6 +208,12 @@
 				$this->model->rule_system->start_adventure();
 
 				$this->view->add_javascript("adventure.js");
+				$this->view->add_javascript("includes/adventure-map.js");
+				$this->view->add_javascript("includes/adventure-objects.js");
+				$this->view->add_javascript("includes/adventure-environment.js");
+				$this->view->add_javascript("includes/adventure-player.js");
+				$this->view->add_javascript("includes/adventure-input.js");
+				$this->view->add_javascript("includes/adventure-init.js");
 
 				if (($active_map["fog_of_war"] == FOW_DAY_CELL) || ($active_map["fog_of_war"] == FOW_NIGHT_CELL)) {
 					$type = "cell";
@@ -256,7 +262,8 @@
 			/* Websocket
 			 */
 			$this->view->open_tag("websocket");
-			$this->view->add_tag("host", $_SERVER["HTTP_HOST"]);
+			$ws_host = explode(":", $_SERVER["HTTP_HOST"])[0];
+				$this->view->add_tag("host", $ws_host);
 			$this->view->add_tag("port", WEBSOCKET_PORT);
 			$this->view->close_tag();
 

@@ -1,0 +1,59 @@
+services:
+
+  # ── PHP / Apache web server ────────────────────────────────────────────────
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOSTNAME: db
+      DB_DATABASE: cauldron
+      DB_USERNAME: cauldron
+      DB_PASSWORD: cauldron
+      TZ: UTC
+    volumes:
+      # Persist user-uploaded files and resources outside the container
+      - ./public/files:/var/www/html/public/files
+      - ./public/resources:/var/www/html/public/resources
+      - ./logfiles:/var/www/html/logfiles
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Node.js WebSocket server ───────────────────────────────────────────────
+  websocket:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./websocket-server.js:/app/websocket-server.js
+      - ./package.json:/app/package.json
+    # npm install is fast (only the 'ws' package); result is cached in the
+    # named volume so subsequent starts skip the network round-trip.
+    command: sh -c "npm install --production --prefer-offline && node websocket-server.js"
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
+  # ── MariaDB database ───────────────────────────────────────────────────────
+  db:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cauldron
+      MYSQL_USER: cauldron
+      MYSQL_PASSWORD: cauldron
+    volumes:
+      - db_data:/var/lib/mysql
+      # Runs once on first start when db_data volume is empty.
+      # Remove the volume (docker compose down -v) to re-initialise.
+      - ./database/mysql.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  db_data:
