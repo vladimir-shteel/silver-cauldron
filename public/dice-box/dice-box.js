@@ -53,7 +53,7 @@ function dice_roll_3d(dice, callback, seed) {
 	dicebox_busy = true;
 
 	$('body').append($('div#dice-box'));
-	$('div#dice-box').css('z-index', 1);
+	$('div#dice-box').css('z-index', 1).addClass('rolling');
 
 	dicebox_clear_timer();
 
@@ -79,7 +79,7 @@ function dicebox_clear_timer() {
 
 function dicebox_hide() {
 	$('body').prepend($('div#dice-box'));
-	$('div#dice-box').css('z-index', '');
+	$('div#dice-box').css('z-index', '').removeClass('rolling');
 }
 
 function dicebox_color(color) {
