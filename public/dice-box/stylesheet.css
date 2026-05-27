@@ -13,6 +13,21 @@ div#dice-box.rolling {
 	border-radius: 8px 8px 0 0;
 }
 
+div.dice-tray-overlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 2;
+	background: rgba(0, 0, 0, 0.05);
+	box-shadow: inset 0 0 0 2px rgba(128, 128, 128, 0.25);
+	border-radius: 8px 8px 0 0;
+}
+
+div.dice-tray-overlay.over {
+	background: rgba(255, 80, 30, 0.15);
+	box-shadow: inset 0 0 0 3px rgba(255, 80, 30, 0.6);
+}
+
 div#dice-box canvas {
    	width:100%;
    	height:100%;

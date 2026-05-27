@@ -2100,6 +2100,13 @@ $(document).ready(function() {
 	var support_crit_rolls = ($('div.playarea').attr('rule_system') == 'dnd5');
 	dice_roll_initialize(support_crit_rolls);
 
+	$('div.btn-group.dice-quick').on('mousedown', 'button', function(event) {
+		if (event.which !== 1) return;
+		event.preventDefault();
+		var sides = parseInt($(this).text().substring(1));
+		dice_button_drag_start.call(this, event, sides);
+	});
+
 	/* Cauldron20 browser extension
 	 */
 	window.setTimeout(function() {

@@ -3,6 +3,65 @@
  */
 var dice_quick_open = true;
 
+function dice_button_drag_start(event, sides) {
+	var start_x = event.clientX;
+	var start_y = event.clientY;
+	var dragging = false;
+	var ghost = null;
+	var btn = $(this);
+
+	var tray_overlay = null;
+
+	$(document).on('mousemove.dicedrag', function(e) {
+		if (!dragging) {
+			if (Math.abs(e.clientX - start_x) > 5 || Math.abs(e.clientY - start_y) > 5) {
+				dragging = true;
+				ghost = $('<div class="dice-drag-ghost">d' + sides + '</div>').appendTo('body');
+				$('body').append($('div#dice-box'));
+				$('div#dice-box').css('z-index', 1);
+				tray_overlay = $('<div class="dice-tray-overlay"></div>').appendTo('div#dice-box');
+			}
+		}
+
+		if (dragging) {
+			ghost.css({ left: e.clientX - 20, top: e.clientY - 20 });
+
+			var rect = document.getElementById('dice-box').getBoundingClientRect();
+			var over = e.clientX >= rect.left && e.clientX <= rect.right &&
+			           e.clientY >= rect.top  && e.clientY <= rect.bottom;
+			tray_overlay.toggleClass('over', over);
+		}
+	});
+
+	$(document).on('mouseup.dicedrag', function(e) {
+		$(document).off('mousemove.dicedrag mouseup.dicedrag');
+
+		if (!dragging) return;
+
+		ghost.remove();
+		tray_overlay.remove();
+
+		var rect = document.getElementById('dice-box').getBoundingClientRect();
+		var dropped = e.clientX >= rect.left && e.clientX <= rect.right &&
+		              e.clientY >= rect.top  && e.clientY <= rect.bottom;
+
+		if (!dropped) {
+			$('body').prepend($('div#dice-box'));
+			$('div#dice-box').css('z-index', '');
+		}
+
+		btn.one('click.dicedrag', function(e) {
+			e.stopImmediatePropagation();
+		});
+
+		var rect = document.getElementById('dice-box').getBoundingClientRect();
+		if (e.clientX >= rect.left && e.clientX <= rect.right &&
+		    e.clientY >= rect.top  && e.clientY <= rect.bottom) {
+			quick_roll(sides);
+		}
+	});
+}
+
 function quick_roll(sides) {
 	var count = Math.max(1, Math.min(20, parseInt($('#dice-quick-count').val()) || 1));
 	var mod   = parseInt($('#dice-quick-mod').val()) || 0;
