@@ -3,3 +3,4 @@ settings/cauldron.conf
 logfiles/*.log
 node_modules/
 CLAUDE.md
+public/resources/
