@@ -273,23 +273,33 @@ function object_dblclick(event) {
 }
 
 /* Correct ui.position for the CSS transform (zoom + pan) on the map container.
- * jQuery UI computes positions in visual/screen coords, but CSS left/top on tokens
- * are in map coords (pre-transform). Call this at the top of every drag callback.
+ * We store the mouse-to-token offset in map coords at drag start (drag_offset).
+ * Each drag event converts the current mouse position to map coords using the
+ * current zoom state and adds the offset — zoom changes mid-drag work correctly.
  */
 function draggable_drag_correction(event, ui) {
-	ui.position.left = Math.round((ui.position.left - zoom_tx) / zoom_level);
-	ui.position.top  = Math.round((ui.position.top  - zoom_ty) / zoom_level);
+	var offset   = ui.helper.data('drag_offset');
+	var mouse_map = viewport_to_map(event.clientX, event.clientY);
+
+	var map_left = Math.round(mouse_map.x + offset.x);
+	var map_top  = Math.round(mouse_map.y + offset.y);
 
 	var tw = $(ui.helper).outerWidth()  || 0;
 	var th = $(ui.helper).outerHeight() || 0;
-	ui.position.left = Math.max(0, Math.min(ui.position.left, map_width  - tw));
-	ui.position.top  = Math.max(0, Math.min(ui.position.top,  map_height - th));
+	ui.position.left = Math.max(0, Math.min(map_left, map_width  - tw));
+	ui.position.top  = Math.max(0, Math.min(map_top,  map_height - th));
 }
 
 function object_drag_start(event, ui) {
 	context_menu_remove();
 
 	var pos_drag = object_position(ui.helper);
+
+	var mouse_map = viewport_to_map(event.clientX, event.clientY);
+	ui.helper.data('drag_offset', {
+		x: pos_drag.left - mouse_map.x,
+		y: pos_drag.top  - mouse_map.y
+	});
 
 	$('div.token.selected, div.character.selected').each(function() {
 		if ($(this).is(ui.helper)) {
