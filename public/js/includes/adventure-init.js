@@ -548,6 +548,9 @@ $(document).ready(function() {
 				break;
 			case 'dice_animate':
 				if (typeof dice_animate_only == 'function') {
+					if ((data.throw_nx !== undefined) && (typeof dice_set_throw_params == 'function')) {
+						dice_set_throw_params(data.throw_nx, data.throw_nz, data.throw_vx, data.throw_vz);
+					}
 					dice_animate_only(data.dice, data.seed);
 				}
 				break;

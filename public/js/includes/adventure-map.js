@@ -11,6 +11,7 @@ function dice_button_drag_start(event, sides) {
 	var btn = $(this);
 
 	var tray_overlay = null;
+	var throw_positions = [];
 
 	$(document).on('mousemove.dicedrag', function(e) {
 		if (!dragging) {
@@ -30,6 +31,14 @@ function dice_button_drag_start(event, sides) {
 			var over = e.clientX >= rect.left && e.clientX <= rect.right &&
 			           e.clientY >= rect.top  && e.clientY <= rect.bottom;
 			tray_overlay.toggleClass('over', over);
+
+			if (over) {
+				var now = Date.now();
+				throw_positions.push({ x: e.clientX, y: e.clientY, t: now });
+				while (throw_positions.length > 2) {
+					throw_positions.shift();
+				}
+			}
 		}
 	});
 
@@ -57,12 +66,50 @@ function dice_button_drag_start(event, sides) {
 		var rect = document.getElementById('dice-box').getBoundingClientRect();
 		if (e.clientX >= rect.left && e.clientX <= rect.right &&
 		    e.clientY >= rect.top  && e.clientY <= rect.bottom) {
+			if (throw_positions.length > 0 && (typeof dice_set_throw_params == 'function')) {
+				var last = throw_positions[throw_positions.length - 1];
+				var nx = Math.max(0.05, Math.min(0.95, 1 - (last.x - rect.left) / rect.width));
+				var nz = Math.max(0.05, Math.min(0.95, (last.y - rect.top)  / rect.height));
+
+				var vx = 0, vz = 0;
+				if (throw_positions.length >= 2) {
+					var first = throw_positions[0];
+					var dt = last.t - first.t;
+					if (dt > 0) {
+						var svx = (last.x - first.x) / dt;
+						var svz = (last.y - first.y) / dt;
+						vx = Math.max(-1.5, Math.min(1.5, -svx * 2));
+						vz = Math.max(-1.5, Math.min(1.5,  svz * 2));
+					}
+				}
+
+				dice_set_throw_params(nx, nz, vx, vz);
+			}
 			quick_roll(sides);
 		}
 	});
 }
 
+function dice_random_throw() {
+	var edge  = Math.floor(Math.random() * 4);
+	var pos   = 0.15 + Math.random() * 0.7;
+	var speed = 0.8  + Math.random() * 0.7;
+	var nx, nz;
+	if      (edge === 0) { nx = 0.95; nz = pos;  }
+	else if (edge === 1) { nx = 0.05; nz = pos;  }
+	else if (edge === 2) { nx = pos;  nz = 0.05; }
+	else                 { nx = pos;  nz = 0.95; }
+	dice_set_throw_params(nx, nz, (0.5 - nx) * speed * 2, (0.5 - nz) * speed * 2);
+}
+
 function quick_roll(sides) {
+	if (typeof dice_set_throw_params == 'function') {
+		var p = window.dice_pending_throw_params;
+		if (!p || (p.nx === 0.5 && p.nz === 0.5 && p.vx === 0 && p.vz === 0)) {
+			dice_random_throw();
+		}
+	}
+
 	var count = Math.max(1, Math.min(20, parseInt($('#dice-quick-count').val()) || 1));
 	var mod   = parseInt($('#dice-quick-mod').val()) || 0;
 

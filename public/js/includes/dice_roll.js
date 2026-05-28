@@ -15,12 +15,16 @@ function dice_roll(dice, callback, send_to_others = false, share_anim = undefine
 
 	if ((localStorage.getItem('dice_type') == 'animated') && (typeof dice_roll_3d == 'function')) {
 		var seed = Math.floor(Math.random() * 0xFFFFFFFF);
+		var throw_params = window.dice_pending_throw_params || { nx: 0.5, nz: 0.5, vx: 0, vz: 0 };
 		var success = dice_roll_3d(dice, callback, seed);
 		if (success && should_anim && (typeof websocket_send == 'function')) {
-			websocket_send({ action: 'dice_animate', dice: dice, seed: seed });
+			websocket_send({ action: 'dice_animate', dice: dice, seed: seed,
+			                 throw_nx: throw_params.nx, throw_nz: throw_params.nz,
+			                 throw_vx: throw_params.vx || 0, throw_vz: throw_params.vz || 0 });
 		}
 		return success;
 	} else {
+		window.dice_pending_throw_params = { nx: 0.5, nz: 0.5, vx: 0, vz: 0 };
 		return dice_roll_quick(dice, callback);
 	}
 }

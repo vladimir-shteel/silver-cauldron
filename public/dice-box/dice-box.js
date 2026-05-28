@@ -44,6 +44,20 @@ function dice_seed(seed) {
 	}
 }
 
+window.dice_pending_throw_params = { nx: 0.5, nz: 0.5, vx: 0, vz: 0 };
+
+function dice_set_throw_params(nx, nz, vx, vz) {
+	window.dice_pending_throw_params = { nx: nx, nz: nz, vx: vx || 0, vz: vz || 0 };
+}
+
+function dice_send_throw_params() {
+	if (window.__dicePhysicsWorker) {
+		var p = window.dice_pending_throw_params;
+		window.__dicePhysicsWorker.postMessage({ action: 'throw_params', nx: p.nx, nz: p.nz, vx: p.vx, vz: p.vz });
+	}
+	window.dice_pending_throw_params = { nx: 0.5, nz: 0.5, vx: 0, vz: 0 };
+}
+
 function dice_roll_3d(dice, callback, seed) {
 	if (dicebox_busy) {
 		return false;
@@ -61,6 +75,7 @@ function dice_roll_3d(dice, callback, seed) {
 		if (seed !== undefined) {
 			dice_seed(seed);
 		}
+		dice_send_throw_params();
 		Box.roll(dice);
 	});
 
@@ -108,5 +123,6 @@ function dice_animate_only(dice, seed) {
 window.dice_roll_3d = dice_roll_3d;
 window.dicebox_color = dicebox_color;
 window.dice_animate_only = dice_animate_only;
+window.dice_set_throw_params = dice_set_throw_params;
 
 export { dice_roll_3d, dicebox_color, dice_animate_only };
