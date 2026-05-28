@@ -1475,6 +1475,7 @@ $(document).ready(function() {
 			my_character.draggable({
 				containment: 'div.playarea > div',
 				handle: 'img',
+				start: object_drag_start,
 				drag: draggable_drag_correction,
 				stop: function(event, ui) {
 					object_move($(this));

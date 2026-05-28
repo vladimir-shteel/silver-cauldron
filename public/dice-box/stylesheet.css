@@ -2,8 +2,8 @@ div#dice-box {
 	position:fixed;
 	left:0;
 	bottom:90px;
-	width:600px;
-	height:600px;
+	width:500px;
+	height:500px;
 	pointer-events: none;
 }
 

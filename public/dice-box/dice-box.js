@@ -1,12 +1,23 @@
 import DiceBox from '/dice-box/dice-box.es.min.js';
 
+// Keep dice visually the same size regardless of tray dimensions.
+// scale is a direct mesh multiplier; camera FOV is fixed, so a larger canvas
+// renders the same world over more pixels → dice appear bigger. We compensate.
+var _diceBoxEl = document.querySelector('#dice-box');
+var _refSize = 500;
+var _refScale = 6;
+var _containerSize = _diceBoxEl
+	? Math.min(_diceBoxEl.offsetWidth || _refSize, _diceBoxEl.offsetHeight || _refSize)
+	: _refSize;
+var _diceScale = _refScale * (_refSize / _containerSize);
+
 var Box = new DiceBox('#dice-box', {
 	assetPath: 'assets/',
 	origin: window.location.origin + '/dice-box/',
 	theme: 'smooth',
 	themeColor: '#ff4020',
 	offscreen: false,
-	scale: 4,
+	scale: _diceScale,
 	gravity: 5
 });
 

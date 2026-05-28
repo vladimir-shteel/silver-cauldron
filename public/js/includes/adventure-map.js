@@ -11,7 +11,7 @@ function dice_button_drag_start(event, sides) {
 	var btn = $(this);
 
 	var tray_overlay = null;
-	var throw_positions = [];
+	var throw_positions = [];  // rolling window of cursor positions while over tray
 
 	$(document).on('mousemove.dicedrag', function(e) {
 		if (!dragging) {
@@ -33,11 +33,13 @@ function dice_button_drag_start(event, sides) {
 			tray_overlay.toggleClass('over', over);
 
 			if (over) {
-				var now = Date.now();
-				throw_positions.push({ x: e.clientX, y: e.clientY, t: now });
-				while (throw_positions.length > 2) {
+				throw_positions.push({ x: e.clientX, y: e.clientY, t: Date.now() });
+				// keep ~150ms of recent movement (8 frames at 60fps)
+				while (throw_positions.length > 8) {
 					throw_positions.shift();
 				}
+			} else {
+				throw_positions = [];
 			}
 		}
 	});
@@ -67,20 +69,22 @@ function dice_button_drag_start(event, sides) {
 		if (e.clientX >= rect.left && e.clientX <= rect.right &&
 		    e.clientY >= rect.top  && e.clientY <= rect.bottom) {
 			if (throw_positions.length > 0 && (typeof dice_set_throw_params == 'function')) {
-				var last = throw_positions[throw_positions.length - 1];
+				var last  = throw_positions[throw_positions.length - 1];
+				var first = throw_positions[0];
+
+				// nx/nz: dice starts at the drop point (last tracked position)
 				var nx = Math.max(0.05, Math.min(0.95, 1 - (last.x - rect.left) / rect.width));
 				var nz = Math.max(0.05, Math.min(0.95, (last.y - rect.top)  / rect.height));
 
+				// velocity over the whole stored window: smooths noise, captures
+				// recent direction even if cursor decelerated at the drop point
 				var vx = 0, vz = 0;
-				if (throw_positions.length >= 2) {
-					var first = throw_positions[0];
-					var dt = last.t - first.t;
-					if (dt > 0) {
-						var svx = (last.x - first.x) / dt;
-						var svz = (last.y - first.y) / dt;
-						vx = Math.max(-1.5, Math.min(1.5, -svx * 2));
-						vz = Math.max(-1.5, Math.min(1.5,  svz * 2));
-					}
+				var dt = last.t - first.t;
+				if (dt > 0) {
+					var svx = (last.x - first.x) / dt;
+					var svz = (last.y - first.y) / dt;
+					vx = Math.max(-1.5, Math.min(1.5, -svx * 2));
+					vz = Math.max(-1.5, Math.min(1.5,  svz * 2));
 				}
 
 				dice_set_throw_params(nx, nz, vx, vz);
