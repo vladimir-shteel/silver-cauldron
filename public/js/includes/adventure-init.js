@@ -74,6 +74,9 @@ $(document).ready(function() {
 		};
 		websocket_send(data);
 
+		/* Sync current music state from server (for late joiners) */
+		websocket.send(JSON.stringify({ action: 'music_state_request' }));
+
 		if (dungeon_master) {
 			if (localStorage.getItem('pause') == 'true') {
 				$('div.menu button.pause').trigger('click');
@@ -136,6 +139,24 @@ $(document).ready(function() {
 			data = JSON.parse(event.data);
 		} catch (e) {
 			return;
+		}
+
+		/* Music actions originate from the server and carry no adventure/user
+		 * metadata. Handle them before the per-adventure/user filters below.
+		 */
+		switch (data.action) {
+			case 'music_play':
+				music_apply_state({ track: data.track, playing: true });
+				return;
+			case 'music_stop':
+				music_apply_state({ track: null, playing: false });
+				return;
+			case 'music_state':
+				music_apply_state({ track: data.track, playing: data.playing, position: data.position });
+				return;
+			case 'music_sync':
+				music_apply_sync(data.position);
+				return;
 		}
 
 		if (data.adventure_id != adventure_id) {

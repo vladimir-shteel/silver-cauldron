@@ -120,6 +120,7 @@ Create a character if you haven't yet done so. To create a new character, click 
 <button class="btn btn-default btn-sm show_collectables">Inventory</button>
 <button class="btn btn-default btn-sm show_journal">Journal</button>
 <button class="btn btn-default btn-sm show_dice">Roll dice (~)</button>
+<button class="btn btn-default btn-sm music_panel">Music</button>
 <xsl:if test="@is_dm='yes'">
 <h2>Dungeon Master options</h2>
 <button class="btn btn-default btn-sm play_audio">Audio</button>

@@ -214,6 +214,7 @@
 				$this->view->add_javascript("includes/adventure-player.js");
 				$this->view->add_javascript("includes/adventure-input.js");
 				$this->view->add_javascript("includes/adventure-init.js");
+				$this->view->add_javascript("includes/adventure-music.js");
 
 				if (($active_map["fog_of_war"] == FOW_DAY_CELL) || ($active_map["fog_of_war"] == FOW_NIGHT_CELL)) {
 					$type = "cell";
